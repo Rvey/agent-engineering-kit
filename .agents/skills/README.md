@@ -12,6 +12,7 @@ directly when an installed skill is not available.
 
 | Skill | Load when | Tier-2 |
 |---|---|---|
+| `agents-md` | Setting up / refreshing a repo's `AGENTS.md`; template placeholders remain; onboarding a project | — |
 | `boost-prompt` | Request is vague / missing scope, deliverables, constraints, or success criteria | — |
 | `deslop` | Feature complete, pre-review: strip AI slop from the branch diff (behavior-neutral) | — |
 | `eslint-prettier-config` | Setting up or changing ESLint/Prettier (flat config, integration, scripts, hooks) | — |
@@ -28,6 +29,7 @@ Full attribution and licenses: [`../../CREDITS.md`](../../CREDITS.md).
 
 | Skill | Source | Adaptation |
 |---|---|---|
+| `agents-md` | Authored in-house | Generator workflow: brief or repo evidence → project-specific AGENTS.md, with anti-template verification gates |
 | `boost-prompt` | github/awesome-copilot (MIT) | Native question tool + chat output instead of Joyride/VSCode; repo grounding + brief template |
 | `deslop` | openclaw/agent-skills (MIT) | Internal review-gate and linter references generalized |
 | `test-audit` | openclaw/agent-skills (MIT) | Source-repo scripts generalized; campaign doc kept with real examples |

@@ -12,7 +12,9 @@ intake → brief (if vague) → load ONE skill → ground → implement
 ## Stage 0 — Setup (once per repo)
 
 1. Drop the kit in (`scripts/bootstrap.sh`).
-2. Adapt `AGENTS.md`: real commands, real paths, your own incident rules.
+2. Generate `AGENTS.md` with the `agents-md` skill — brief or repo evidence
+   in, real commands and the project's own incident rules out. Never copy the
+   template; the skill's anti-slop gate rejects placeholder or generic output.
 3. Wire the verification gates into CI.
 4. Tell every session to start with: `Read AGENTS.md and follow it.`
 

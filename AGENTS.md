@@ -1,10 +1,22 @@
 # AGENTS.md — <Project Name>
 
-> **This is a template. Adapt me.**
-> Copy this file to your repository root, then replace every `<placeholder>`
-> and every example command with your stack's real ones. The structure is
-> what matters: one routing table that tells every AI agent where to start,
-> which skill to load, and which command proves the work is done.
+<!--
+agent-engineering-kit:template
+
+AGENT — STOP BEFORE COPYING: this is the kit's generic template, not this
+project's instructions. Do NOT copy it verbatim, do NOT leave its
+`<placeholders>`, and do NOT treat its examples as this repo's commands or
+rules. When asked to set up AGENTS.md for a repository, load
+`.agents/skills/agents-md/SKILL.md` and generate the file from the repo's
+actual config and the user's brief. Placeholders mean "unknown — ask or
+omit", never "keep me".
+-->
+
+> **Generate, don't copy.** This file ships as a shape for agents to fill
+> from real repo evidence. If it is still unchanged in a project, the setup
+> step was skipped — load `.agents/skills/agents-md/SKILL.md` and generate
+> the project-specific file from the repo's actual config and the user's
+> brief.
 
 Repo-wide instructions for AI coding agents. Stack-specific rules live in
 per-app `AGENTS.md` files (e.g. `apps/web/AGENTS.md`) and in
@@ -50,6 +62,7 @@ skill loaded.
 
 | Task | Load before starting |
 |---|---|
+| Generate / refresh this repo's `AGENTS.md` (setup) | `.agents/skills/agents-md/SKILL.md` |
 | Vague, ambiguous, or underspecified request | `.agents/skills/boost-prompt/SKILL.md` |
 | React/Next UI work | `.agents/skills/react-next-performance/SKILL.md` |
 | FastAPI / Python API work | `.agents/skills/fastapi-python/SKILL.md` |

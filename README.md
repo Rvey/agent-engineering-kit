@@ -21,8 +21,8 @@ This kit packages all four into files you drop into any new project.
 
 | Path | What it is |
 |---|---|
-| `AGENTS.md` | The routing table for agents: skill selection, verification gates, hard rules, review protocol. **Adapt this first.** |
-| `.agents/skills/` | 9 vendored skills (`SKILL.md` + references) covering prompt refinement, React/Next perf, FastAPI, Python perf, performance work, security, tests, lint config, and diff cleanup |
+| `AGENTS.md` | The routing table for agents: skill selection, verification gates, hard rules, review protocol. **Generate it from your repo first — don't copy the template.** |
+| `.agents/skills/` | 10 vendored skills (`SKILL.md` + references) covering AGENTS.md generation, prompt refinement, React/Next perf, FastAPI, Python perf, performance work, security, tests, lint config, and diff cleanup |
 | `.cursor/rules/` | Glob-scoped rule templates for Cursor-compatible agents (web app + Python runtime) |
 | `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure |
 | `scripts/bootstrap.sh` | Installs the kit into any repository in one command |
@@ -43,10 +43,79 @@ cd /path/to/your-project
 
 Then, in order:
 
-1. **Adapt `AGENTS.md`** — replace every `<placeholder>` and every example command with your stack's real commands. This is the single highest-value 15 minutes you will spend.
+1. **Generate `AGENTS.md`** — open your agent in the project and run the
+   generation prompt. Full instructions and copy-paste prompts:
+   [Generate `AGENTS.md`](#generate-agentsmd).
 2. **Define your verification gates** — see [docs/03-verification-gates.md](docs/03-verification-gates.md). Wire the same commands into CI.
 3. **Start a session with**: `Read AGENTS.md and follow it.` Then give the agent the task.
 4. When the task is vague, the agent should load `boost-prompt` and produce a brief before writing code. When it isn't, it should load the owning skill and go.
+
+## Generate `AGENTS.md`
+
+`AGENTS.md` is the one file every agent session reads first. The kit ships a
+template full of `<placeholders>` — **do not copy it**. Generate the
+project-specific file instead: the `agents-md` skill traces every command to
+real config, asks about what the repo cannot answer, and refuses to ship
+placeholders or another codebase's rules.
+
+### 1. Paste a prompt in your agent
+
+**With a brief** — you already know what you built:
+
+```text
+Read AGENTS.md, then load .agents/skills/agents-md/SKILL.md and follow it.
+
+Generate this repo's AGENTS.md from real evidence.
+
+Brief: we built <what it is>. Stack: <stack>. Layout: <where things live>.
+Commands: lint=<cmd>, typecheck=<cmd>, test=<cmd>, build=<cmd>.
+Things agents keep getting wrong: <incidents, if any>.
+Existing instruction files: <paths, if any>.
+```
+
+**Without a brief** — let the skill read the repo and ask what it needs:
+
+```text
+Read AGENTS.md, then load .agents/skills/agents-md/SKILL.md and follow it.
+Generate this repo's AGENTS.md. No brief — derive everything from the repo.
+Ask me only what the config can't answer.
+```
+
+Fill in what you know and delete the lines you don't — the skill asks for
+anything missing instead of guessing. You can also paste the brief as free
+text; the skill extracts the facts either way.
+
+### 2. Answer its questions
+
+At most 4, and only about things the repo cannot answer: product name and
+purpose, which directory owns which surface, which discovered commands are the
+real gates, and incidents you never want repeated. "Use your judgment" is a
+valid answer — the skill decides and records the decision in its handoff.
+
+### 3. Check the handoff — done means you saw
+
+- the **evidence map**: every command in the file traced to a source
+  (`package.json:7`, `.github/workflows/ci.yml:9`, `Makefile:12`, …);
+- the **anti-slop gate output**: no placeholders, no template prose, every
+  routing-table skill path exists on disk;
+- the **line count** — 40–120 lines is normal; longer means padding;
+- **open items**: facts the skill could not verify, left out of the file on
+  purpose and listed for you.
+
+Anything else ("I adapted the template") is a failed generation — reject it
+and re-run the prompt.
+
+### 4. Already have an `AGENTS.md`?
+
+| Situation | What the skill does |
+|---|---|
+| Still the untouched template (has the `agent-engineering-kit:template` marker) | Replaces it wholesale, showing you what changed |
+| You already edited it | Merges: keeps your content, adds missing facts, lists removals |
+| No repo yet, brief only | Builds from the brief; unanswered facts stay out of the file until you confirm them |
+
+Re-run the generation whenever the stack changes or an incident class appears.
+Then wire the same gates into CI and start sessions with `Read AGENTS.md and
+follow it.`
 
 ## The loop
 
@@ -88,6 +157,7 @@ Full walkthrough: [docs/01-agent-workflow.md](docs/01-agent-workflow.md).
 
 | Skill | Load it when |
 |---|---|
+| `agents-md` | Setting up or refreshing a repo's `AGENTS.md`; template has placeholders; onboarding a project |
 | `boost-prompt` | The request is vague or missing scope/deliverables/constraints |
 | `react-next-performance` | Writing or reviewing React/Next client components, hooks, effects, streaming UI, canvas code |
 | `fastapi-python` | Writing or reviewing FastAPI/Python API code |
@@ -107,7 +177,7 @@ The eight performance guards in [docs/04-performance-guards.md](docs/04-performa
 ## Adopting this in an existing repo
 
 1. Run the bootstrap.
-2. Adapt `AGENTS.md` — commands, paths, and the incidents your team never wants to repeat.
+2. Generate `AGENTS.md` with the `agents-md` skill (see [Generate `AGENTS.md`](#generate-agentsmd)) — commands, paths, and the incidents your team never wants to repeat.
 3. Prune the skills you don't need. A smaller skill set that agents actually load beats a big one they ignore.
 4. Add a skill whenever a workflow has burned you twice: vendor it, adapt the commands, wire it into the routing table. See [docs/05-adding-a-skill.md](docs/05-adding-a-skill.md).
 

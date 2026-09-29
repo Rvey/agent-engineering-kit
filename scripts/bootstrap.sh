@@ -5,7 +5,9 @@
 #   scripts/bootstrap.sh <target-dir> [--force] [--with-cursor] [--skills-only]
 #
 # What it does:
-#   - copies AGENTS.md into <target-dir> (skipped if present unless --force)
+#   - copies the AGENTS.md template into <target-dir> (skipped if present
+#     unless --force). The template is a shape, not content: the next step is
+#     to generate the project-specific file with the agents-md skill.
 #   - copies .agents/skills/ into <target-dir>/.agents/skills/
 #   - copies .cursor/rules/ templates when --with-cursor is given
 #   - with --skills-only, copies only the skills (no AGENTS.md)
@@ -60,8 +62,9 @@ copy_file() {
 
 if [[ "$SKILLS_ONLY" -ne 1 ]]; then
   if [[ -e "$TARGET/AGENTS.md" && "$FORCE" -ne 1 ]]; then
-    echo "  skip   AGENTS.md (exists — merge the template manually, or use --force)"
-    echo "         The kit's AGENTS.md is a template: adapt it to this repo."
+    echo "  skip   AGENTS.md (exists — merge missing facts, or use --force)"
+    echo "         To merge or refresh it from real repo evidence, run the"
+    echo "         generation prompt printed at the end of this script."
   else
     copy_file "$KIT_DIR/AGENTS.md" "$TARGET/AGENTS.md"
   fi
@@ -95,8 +98,23 @@ fi
 cat <<'NEXT'
 
 Next steps
-  1. Adapt AGENTS.md: replace every <placeholder> and example command with
-     this repo's real gates and paths.
+  1. Generate this repo's AGENTS.md. Open your agent in the target repo and
+     paste (fill in what you know; leave out what you don't):
+
+         Generate this repo's AGENTS.md. Follow
+         .agents/skills/agents-md/SKILL.md.
+
+         Brief: we built <what it is>. Stack: <stack>. Layout: <where
+         things live>. Commands: lint=<cmd>, typecheck=<cmd>, test=<cmd>.
+         Things agents keep getting wrong: <incidents, if any>.
+
+     No brief? Paste instead:
+         Generate this repo's AGENTS.md. No brief — derive everything from
+         the repo. Follow .agents/skills/agents-md/SKILL.md.
+
+     The generator replaces the template, traces every gate command to real
+     config, and asks instead of guessing. It will not ship placeholders.
+     Full instructions: README.md → Generate AGENTS.md.
   2. Wire the same gate commands into CI.
   3. Start agent sessions with: "Read AGENTS.md and follow it."
   4. When a workflow burns you twice, add a skill (scripts/new-skill.sh) and a
