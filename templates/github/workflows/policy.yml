@@ -1,0 +1,55 @@
+# policy — no-AI gate for the agent loop.
+#
+# Fails a PR when:
+#   1. the PR body lacks real Gates / Deslop evidence (Security when the diff
+#      touches sensitive paths);
+#   2. added code introduces suppressions (eslint-disable, # noqa,
+#      @ts-ignore) without a written reason;
+#   3. AGENTS.md is missing or still the kit template.
+#
+# Enforce it: branch protection -> require the "policy / loop evidence" check.
+# Bypass: maintainers apply the `policy:skip` label (the job is skipped), or
+# an added line carries `policy:allow`.
+#
+# Configure the env block below; the check logic lives in
+# .github/scripts/policy-check.sh.
+name: policy
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  loop-evidence:
+    name: loop evidence
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'policy:skip') }}
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PR_NUMBER: ${{ github.event.pull_request.number }}
+      BASE_SHA: ${{ github.event.pull_request.base.sha }}
+      HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+      # Comma-separated PR body sections that must have content.
+      REQUIRED_SECTIONS: 'Gates,Deslop'
+      # Extra section required when sensitive paths changed.
+      SECURITY_SECTION: 'Security'
+      # Paths that force the security sign-off section.
+      SENSITIVE_PATTERNS: '(^|/)(auth|payments?|billing|secrets?|credentials?|uploads?|webhooks?)(/|\.|$)|(^|/)\.env(\..+)?$'
+      # File extensions scanned for unexplained suppressions.
+      SCAN_EXTENSIONS: '*.ts *.tsx *.js *.jsx *.mjs *.cjs *.py *.rb *.go *.rs *.java *.kt *.css *.scss *.vue *.svelte'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Fetch PR body
+        run: gh pr view "$PR_NUMBER" --json body --jq '.body' > "$RUNNER_TEMP/pr-body.md"
+      - name: Run policy check
+        env:
+          PR_BODY_FILE: ${{ runner.temp }}/pr-body.md
+        run: bash .github/scripts/policy-check.sh

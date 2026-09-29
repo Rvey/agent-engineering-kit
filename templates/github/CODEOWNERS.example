@@ -1,0 +1,23 @@
+# CODEOWNERS — rename this file to `.github/CODEOWNERS` and replace the
+# example owners with real teams/users. Until then it is inert.
+#
+# With branch protection ("Require review from Code Owners"), a matching
+# path forces the right reviewer before merge. Use it to turn the security
+# sign-off into a required review instead of a suggestion.
+
+# Repo baseline — every change needs one of these reviewers:
+# *                     @your-org/maintainers
+
+# Sensitive surfaces — force the security sign-off gate:
+# /auth/                @your-org/security
+# /payments/            @your-org/security
+# /billing/             @your-org/security
+# /uploads/             @your-org/security
+# /webhooks/            @your-org/security
+# /.env.example         @your-org/security
+# **/.env*              @your-org/security
+
+# Agent instructions — changes to the loop itself need a maintainer:
+# /AGENTS.md            @your-org/maintainers
+# /.agents/             @your-org/maintainers
+# /.github/workflows/   @your-org/maintainers

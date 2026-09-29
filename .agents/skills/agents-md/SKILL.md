@@ -77,7 +77,12 @@ Follow .agents/skills/agents-md/SKILL.md.
 5. **Run the anti-slop gate** (below) before writing.
 6. **Write `AGENTS.md`** at the repo root. If one exists: merge — never clobber
    user-authored content; list what you removed and why.
-7. **Report** the evidence map (each command → source file:line) and the open
+7. **Write `.agents/verify.sh`** (`chmod +x`): the same gate commands, lint and
+   typecheck first, `test`/`build` guarded so `--fast` skips them (the
+   pre-commit hook runs `--fast`; CI runs the whole script). If
+   `.github/workflows/policy.yml` exists, the Review protocol section must
+   state the PR-body requirement (Gates, Deslop, Security when applicable).
+8. **Report** the evidence map (each command → source file:line) and the open
    items in chat. Unknowns live in the handoff, not as placeholders in the
    file.
 
@@ -111,9 +116,25 @@ Skill lookup order: <repo rule; default: vendored .agents/skills/ wins>.
 <Only the steps this repo can actually run.>
 ```
 
+### Gate script (`.agents/verify.sh`)
+
+```bash
+#!/usr/bin/env bash
+# Verification gates for <project>. Full: bash .agents/verify.sh
+# Fast (pre-commit): bash .agents/verify.sh --fast
+set -euo pipefail
+fast=0; [[ "${1:-}" == "--fast" ]] && fast=1
+<lint command>
+<typecheck command>
+if [[ $fast -eq 0 ]]; then
+  <test command>
+  <build command>
+fi
+```
+
 ## Verification — anti-slop gate
 
-Run all four before declaring the file done:
+Run all five before declaring the file done:
 
 ```bash
 # 1. No unfilled facts. Allowed matches: notation inside path/code patterns
@@ -131,6 +152,9 @@ done
 
 # 4. Every gate command traces to real config (spot-check each one).
 grep -nE '`[a-z].*`' AGENTS.md   # then confirm each command in package.json / Makefile / CI / pyproject
+
+# 5. The gate script parses and is executable.
+bash -n .agents/verify.sh && test -x .agents/verify.sh
 ```
 
 **Stranger test:** strip the project name from the file. If every remaining
@@ -154,6 +178,8 @@ Also report: line count, and the evidence map (command → source).
   already enforces; point at the file that enforces it.
 - **Merge, don't clobber.** Preserve existing user-authored instructions;
   show a diff summary for anything removed.
+- **Gate commands live once.** `.agents/verify.sh`, `AGENTS.md`, the
+  pre-commit hook, and CI read the same commands — never let them drift.
 - **The generated file is the deliverable, not a proposal.** Write it in the
   same turn the gate passes.
 

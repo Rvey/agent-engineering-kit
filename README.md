@@ -24,8 +24,10 @@ This kit packages all four into files you drop into any new project.
 | `AGENTS.md` | The routing table for agents: skill selection, verification gates, hard rules, review protocol. **Generate it from your repo first — don't copy the template.** |
 | `.agents/skills/` | 10 vendored skills (`SKILL.md` + references) covering AGENTS.md generation, prompt refinement, React/Next perf, FastAPI, Python perf, performance work, security, tests, lint config, and diff cleanup |
 | `.cursor/rules/` | Glob-scoped rule templates for Cursor-compatible agents (web app + Python runtime) |
-| `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure |
+| `templates/github/` | Loop-enforcement files copied by bootstrap: PR template, no-AI policy workflow + check script, CODEOWNERS example |
+| `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement |
 | `scripts/bootstrap.sh` | Installs the kit into any repository in one command |
+| `scripts/install-hooks.sh` | Installs a pre-commit hook that runs the fast gates (`.agents/verify.sh --fast`) |
 | `scripts/new-skill.sh` | Scaffolds a correctly shaped new skill |
 | `CREDITS.md` | Upstream sources and licenses for every vendored skill |
 
@@ -46,9 +48,14 @@ Then, in order:
 1. **Generate `AGENTS.md`** — open your agent in the project and run the
    generation prompt. Full instructions and copy-paste prompts:
    [Generate `AGENTS.md`](#generate-agentsmd).
-2. **Define your verification gates** — see [docs/03-verification-gates.md](docs/03-verification-gates.md). Wire the same commands into CI.
-3. **Start a session with**: `Read AGENTS.md and follow it.` Then give the agent the task.
-4. When the task is vague, the agent should load `boost-prompt` and produce a brief before writing code. When it isn't, it should load the owning skill and go.
+2. **Define your verification gates** — see [docs/03-verification-gates.md](docs/03-verification-gates.md). Wire the commands into CI and require the checks in branch protection.
+3. **Turn on loop enforcement** — install the pre-commit hook
+   (`~/agent-engineering-kit/scripts/install-hooks.sh .`), require the
+   `policy / loop evidence` check in branch protection, and rename
+   `.github/CODEOWNERS.example` to `.github/CODEOWNERS` with real owners.
+   Why each layer exists: [docs/07-loop-enforcement.md](docs/07-loop-enforcement.md).
+4. **Start a session with**: `Read AGENTS.md and follow it.` Then give the agent the task.
+5. When the task is vague, the agent should load `boost-prompt` and produce a brief before writing code. When it isn't, it should load the owning skill and go.
 
 ## Generate `AGENTS.md`
 
@@ -178,8 +185,9 @@ The eight performance guards in [docs/04-performance-guards.md](docs/04-performa
 
 1. Run the bootstrap.
 2. Generate `AGENTS.md` with the `agents-md` skill (see [Generate `AGENTS.md`](#generate-agentsmd)) — commands, paths, and the incidents your team never wants to repeat.
-3. Prune the skills you don't need. A smaller skill set that agents actually load beats a big one they ignore.
-4. Add a skill whenever a workflow has burned you twice: vendor it, adapt the commands, wire it into the routing table. See [docs/05-adding-a-skill.md](docs/05-adding-a-skill.md).
+3. Turn on enforcement: `scripts/install-hooks.sh .`, require the `policy / loop evidence` check, set CODEOWNERS — see [docs/07-loop-enforcement.md](docs/07-loop-enforcement.md).
+4. Prune the skills you don't need. A smaller skill set that agents actually load beats a big one they ignore.
+5. Add a skill whenever a workflow has burned you twice: vendor it, adapt the commands, wire it into the routing table. See [docs/05-adding-a-skill.md](docs/05-adding-a-skill.md).
 
 ## Credits
 

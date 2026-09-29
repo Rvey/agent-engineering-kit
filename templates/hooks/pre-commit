@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# pre-commit — run the repo's fast verification gates before every commit.
+# Installed by agent-engineering-kit: scripts/install-hooks.sh
+#
+# The gate commands live in .agents/verify.sh, written by the agents-md
+# generator from real repo config. Keep that file as the single source the
+# hook and CI both run.
+set -euo pipefail
+
+if [[ ! -f .agents/verify.sh ]]; then
+  cat >&2 <<'MSG'
+pre-commit: .agents/verify.sh not found.
+
+Generate it once with the agents-md skill (README -> Generate AGENTS.md), or
+write it by hand with your fast gates (lint, typecheck). It is the single
+source of the commands this hook runs.
+MSG
+  exit 1
+fi
+
+echo "pre-commit: fast gates (.agents/verify.sh --fast)"
+bash .agents/verify.sh --fast

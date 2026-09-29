@@ -2,15 +2,18 @@
 # bootstrap.sh — install the Agent Engineering Kit into a repository.
 #
 # Usage:
-#   scripts/bootstrap.sh <target-dir> [--force] [--with-cursor] [--skills-only]
+#   scripts/bootstrap.sh <target-dir> [--force] [--with-cursor] [--skills-only] [--no-github]
 #
 # What it does:
 #   - copies the AGENTS.md template into <target-dir> (skipped if present
 #     unless --force). The template is a shape, not content: the next step is
 #     to generate the project-specific file with the agents-md skill.
 #   - copies .agents/skills/ into <target-dir>/.agents/skills/
+#   - copies the loop-enforcement files into <target-dir>/.github/
+#     (PR template, no-AI policy workflow + check script, CODEOWNERS example)
 #   - copies .cursor/rules/ templates when --with-cursor is given
 #   - with --skills-only, copies only the skills (no AGENTS.md)
+#   - with --no-github, skips the .github/ files (non-GitHub hosts)
 #
 # Nothing is deleted. Existing files are never overwritten unless --force.
 set -euo pipefail
@@ -20,21 +23,23 @@ TARGET="${1:-}"
 FORCE=0
 WITH_CURSOR=0
 SKILLS_ONLY=0
+WITH_GITHUB=1
 
 for arg in "$@"; do
   case "$arg" in
     --force) FORCE=1 ;;
     --with-cursor) WITH_CURSOR=1 ;;
     --skills-only) SKILLS_ONLY=1 ;;
+    --no-github) WITH_GITHUB=0 ;;
     --help|-h)
-      sed -n '2,20p' "$0" | sed 's/^# \{0,1\}//'
+      awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"
       exit 0
       ;;
   esac
 done
 
 if [[ -z "$TARGET" || "$TARGET" == --* ]]; then
-  echo "error: usage: $0 <target-dir> [--force] [--with-cursor] [--skills-only]" >&2
+  echo "error: usage: $0 <target-dir> [--force] [--with-cursor] [--skills-only] [--no-github]" >&2
   exit 1
 fi
 
@@ -95,6 +100,13 @@ if [[ "$WITH_CURSOR" -eq 1 ]]; then
   done
 fi
 
+if [[ "$WITH_GITHUB" -eq 1 && "$SKILLS_ONLY" -ne 1 ]]; then
+  copy_file "$KIT_DIR/templates/github/pull_request_template.md" "$TARGET/.github/pull_request_template.md"
+  copy_file "$KIT_DIR/templates/github/workflows/policy.yml" "$TARGET/.github/workflows/policy.yml"
+  copy_file "$KIT_DIR/templates/github/scripts/policy-check.sh" "$TARGET/.github/scripts/policy-check.sh"
+  copy_file "$KIT_DIR/templates/github/CODEOWNERS.example" "$TARGET/.github/CODEOWNERS.example"
+fi
+
 cat <<'NEXT'
 
 Next steps
@@ -115,11 +127,17 @@ Next steps
      The generator replaces the template, traces every gate command to real
      config, and asks instead of guessing. It will not ship placeholders.
      Full instructions: README.md → Generate AGENTS.md.
-  2. Wire the same gate commands into CI.
-  3. Start agent sessions with: "Read AGENTS.md and follow it."
-  4. When a workflow burns you twice, add a skill (scripts/new-skill.sh) and a
+  2. Install the pre-commit hook (runs the fast gates before each commit):
+         scripts/install-hooks.sh <this-project>     # run from the kit
+  3. Wire the gate commands into CI and require the "policy / loop evidence"
+     check in branch protection. Rename .github/CODEOWNERS.example to
+     .github/CODEOWNERS and set real owners. Why it works this way:
+     docs/07-loop-enforcement.md.
+  4. Start agent sessions with: "Read AGENTS.md and follow it."
+  5. When a workflow burns you twice, add a skill (scripts/new-skill.sh) and a
      routing row in AGENTS.md.
 
 Docs: docs/01-agent-workflow.md (the loop), docs/03-verification-gates.md
-(gates), docs/04-performance-guards.md (the hard rules), docs/05-adding-a-skill.md.
+(gates), docs/04-performance-guards.md (the hard rules), docs/05-adding-a-skill.md,
+docs/07-loop-enforcement.md (making juniors unable to skip the loop).
 NEXT

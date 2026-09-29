@@ -16,7 +16,10 @@ intake → brief (if vague) → load ONE skill → ground → implement
    in, real commands and the project's own incident rules out. Never copy the
    template; the skill's anti-slop gate rejects placeholder or generic output.
 3. Wire the verification gates into CI.
-4. Tell every session to start with: `Read AGENTS.md and follow it.`
+4. Install the pre-commit hook (`scripts/install-hooks.sh .`), require the
+   `policy / loop evidence` check in branch protection, and set CODEOWNERS.
+   See [docs/07-loop-enforcement.md](07-loop-enforcement.md).
+5. Tell every session to start with: `Read AGENTS.md and follow it.`
 
 ## Stage 1 — Intake
 

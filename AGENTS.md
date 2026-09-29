@@ -154,3 +154,6 @@ A change is not done until all of these are true:
    gate in `.agents/skills/test-audit/SKILL.md`.
 6. **Handoff**: what changed, which gates ran with results, known risks,
    follow-ups. No silent scope creep.
+7. **PR evidence**: the pull request body carries the Gates, Deslop, and
+   (when sensitive paths changed) Security sections — the repo's `policy`
+   job blocks the merge otherwise.
