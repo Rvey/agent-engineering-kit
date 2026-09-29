@@ -1,0 +1,38 @@
+---
+description: Python runtime layering and structure (FastAPI)
+globs: apps/runtime/**
+alwaysApply: false
+---
+
+# Python runtime standards (`apps/runtime`)
+
+Adapt paths and commands to your repo. Load
+`.agents/skills/fastapi-python/SKILL.md` before writing or reviewing API code.
+
+## Layering (strict)
+
+1. **`api/`** — thin routers: parse request, call service, return response
+2. **`services/`** — business logic, integrations, domain rules
+3. **`repositories/`** — database access only
+4. **`schemas/`** — Pydantic request/response models
+5. **`models/`** — ORM entities
+6. **`core/`** — settings (`pydantic-settings`), engine/session, lifespan
+
+No business logic in `main.py`. No scattered `os.getenv` — settings come from
+one config module.
+
+## Conventions
+
+- `async def` for all I/O; Pydantic v2 models over raw dicts
+- Guard-clause error handling: handle edge cases at entry, happy path last
+- Dependency injection for shared resources; lifespan managers for
+  startup/shutdown
+- Use the repo's package manager and lockfile (`uv sync --extra dev`,
+  `uv run …`); never mixed installers
+- Caching via a shared store where more than one process serves traffic
+
+## Structure hygiene
+
+- Keep the src-layout under `app/`
+- Tests mirror the package layout under `tests/`
+- Do not invent new top-level folders; scripts go in `scripts/`

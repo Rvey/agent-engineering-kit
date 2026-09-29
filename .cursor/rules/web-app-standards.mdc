@@ -1,0 +1,48 @@
+---
+description: Web app standards (Next.js/React, TypeScript, structure, performance)
+globs: apps/web/**
+alwaysApply: false
+---
+
+# Web app standards (`apps/web`)
+
+Adapt paths and commands to your repo. Load
+`.agents/skills/react-next-performance/SKILL.md` before writing or refactoring
+React/Next UI.
+
+## TypeScript & clean code
+
+- Strict TypeScript; avoid `any` unless justified and documented
+- Typed API payloads and component props; no type laundering (`as any`,
+  widen-then-assert)
+- Small modules, single responsibility; shared contracts live in
+  `packages/shared` (one source of truth)
+- Prefer `@/` imports; no deep `../../../` chains
+
+## Folder structure
+
+- `app/` — App Router; thin pages that compose features
+- `components/ui/` — design-system primitives only
+- `components/<feature>/` — feature UI
+- `features/` — hooks, mutations, selectors (not JSX dumps)
+- `lib/` — env, API clients, domain utilities
+- `app/api/` — BFF only; no domain business logic in the framework layer
+
+## Performance
+
+- Server Components by default; tight `"use client"` boundaries
+- `next/dynamic` for heavy client islands (canvas, editors, playgrounds)
+- `React.memo` on custom canvas nodes; stable `nodeTypes`/`edgeTypes`
+  outside render
+- `useMemo` / `useCallback` on hot paths (handlers, derived selectors) — not
+  cargo-culted
+- Prefer derived state and event handlers over `useEffect` chains
+- No effect-driven data fetching when the server layer can own it
+- Never call your own route handlers from Server Components
+
+## Production checklist
+
+- Layouts, `loading.tsx` / `error.tsx`, streaming where useful
+- Parallel data fetching; env hygiene (`NEXT_PUBLIC_*` only for public values)
+- No dep-less effects, no fresh-identity deps, no per-token `setState`
+  (see `/AGENTS.md` hard rules)
