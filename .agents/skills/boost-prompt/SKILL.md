@@ -1,6 +1,6 @@
 ---
 name: boost-prompt
-description: "Intent-to-brief refinement before coding: when scope, deliverables, constraints, or success criteria are vague, interrogate scope, ground in repo, then emit a structured markdown brief. Never writes code."
+description: "Intent-to-brief refinement before coding: when scope, deliverables, constraints, or success criteria are vague, interrogate scope, ground in repo, then emit a structured markdown brief. Never writes code. Use when a request is underspecified, ambiguous, or arrives without scope or acceptance criteria."
 ---
 
 # Boost Prompt — Intent to Coding Brief

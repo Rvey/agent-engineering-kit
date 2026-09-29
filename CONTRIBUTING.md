@@ -1,17 +1,58 @@
 # Maintaining the kit
 
-This repository distributes the root `AGENTS.md` as a template. Keep its
-`agent-engineering-kit:template` marker: an adopting agent replaces it with
-instructions derived from the target project. Contributor instructions for
-the kit live here so they cannot be confused with the distributed template.
+Two `AGENTS.md` files, two jobs. `templates/AGENTS.template.md` is what gets
+copied into other repositories: keep its `agent-engineering-kit:template`
+marker and its placeholders. The root `AGENTS.md` is this repository's real
+instructions — no placeholders, no another-project examples, gates that
+actually run here. Contributor instructions therefore live in this file, not
+in the root `AGENTS.md`.
 
-The kit is shell tooling, documentation, and vendored skills. For changes to
-installation or policy behavior, run `bash tests/setup-smoke.sh`, then check
-shell syntax with `bash -n` on the changed scripts. The smoke test creates a
-temporary Git repository and checks reruns, hook conflicts, readiness, and
-policy failure cases using the setup tools copied into the target. CI runs
-the same checks in `.github/workflows/kit.yml`.
+## Gates before a PR
 
-If a change adds or edits a skill, update the routing table in `AGENTS.md`,
-the skill catalog in `.agents/skills/README.md`, and the public README. Keep
-the kit's workflow examples distinct from actual target-repository commands.
+Run all four from the repository root:
+
+```bash
+bash scripts/lint.sh              # shell syntax, shellcheck, skill frontmatter, markdown links
+bash tests/setup-smoke.sh         # install, reruns, hook conflicts, readiness, policy (slow)
+bash scripts/setup-check.sh --kit # kit dogfood check: template intact, root AGENTS.md real
+actionlint .github/workflows/kit.yml templates/github/workflows/*.yml
+```
+
+`.github/workflows/kit.yml` runs the same set on every push and pull request.
+The smoke test builds a throwaway Git repository in the temp directory and
+exercises the scripts the way an adopter would, including the copied
+`.agents/` tools, so behaviour changes get caught before release.
+
+## Changing install or policy behaviour
+
+Add a case to `tests/setup-smoke.sh` that fails before your change and passes
+after it. A behaviour change without a new smoke case will regress quietly:
+the script is the only thing that exercises bootstrap and the hook installer
+end to end.
+
+When you add an option to a copied tool, teach both copies. `scripts/setup-check.sh`
+ships to adopters as `.agents/setup-check.sh`, so anything it reads must exist
+in the target: resolve starters through `.agents/verify-templates/` first and
+fall back to the kit checkout only for local `--kit` runs.
+
+Vendor nothing by hand. Fetching a skill, copying a reference, or changing an
+upstream file means updating [CREDITS.md](CREDITS.md) with the source and
+licence in the same change.
+
+## Adding or editing a skill
+
+1. `scripts/new-skill.sh <name>` scaffolds the frontmatter and workflow
+   skeleton, or edit the existing `SKILL.md`.
+2. The description must carry a `Use when` trigger — `scripts/lint.sh` fails
+   without one. That clause is how an agent decides to load the skill at all.
+3. Every `references/*.md` path named in the skill must exist on disk; the
+   lint check verifies both directions.
+4. Update the routing table in `templates/AGENTS.template.md`, the catalog in
+   `.agents/skills/README.md`, and the skill table in `README.md`.
+
+## Verifying templates you ship
+
+`templates/verify/*.sh` are copied into adopter repositories, so they must be
+syntax-clean and shellcheck-clean, and they must keep a `SETUP:` marker on
+every line a human still has to edit. `.agents/setup-check.sh` treats a
+remaining `SETUP:` marker as an incomplete setup, which is the point.

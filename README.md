@@ -21,15 +21,19 @@ This kit packages all four into files you drop into any new project.
 
 | Path | What it is |
 |---|---|
-| `AGENTS.md` | The routing table for agents: skill selection, verification gates, hard rules, review protocol. **Generate it from your repo first — don't copy the template.** |
+| `templates/AGENTS.template.md` | The starting shape for another repo's `AGENTS.md`: routing table, gates, hard rules, review protocol. **Generate the real file from your repo — don't keep the placeholders.** |
+| `AGENTS.md` | This kit repo's own instructions, generated from its real layout and gates. Not the template — see the row above. |
 | `.agents/skills/` | 11 vendored skills (`SKILL.md` + references) covering full setup, AGENTS.md generation, prompt refinement, React/Next perf, FastAPI, Python perf, performance work, security, tests, lint config, and diff cleanup |
 | `.cursor/rules/` | Glob-scoped rule templates for Cursor-compatible agents (web app + Python runtime) |
 | `templates/github/` | Loop-enforcement files copied by bootstrap: PR template, CI gate and policy workflows, check script, CODEOWNERS example |
-| `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement |
+| `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement, troubleshooting |
 | `scripts/bootstrap.sh` | Installs the kit into any repository in one command |
 | `scripts/install-hooks.sh` | Installs a pre-commit hook that runs the fast gates (`.agents/verify.sh --fast`) |
 | `scripts/setup-check.sh` | Reports local setup status and names missing steps |
 | `scripts/new-skill.sh` | Scaffolds a correctly shaped new skill |
+| `scripts/lint.sh` | Fast static checks: shell syntax, shellcheck, skill frontmatter, markdown links |
+| `templates/verify/` | Ready-to-edit `verify.sh` starters for shell, Node, and Python repos |
+| `tests/setup-smoke.sh` | Disposable-repo regression test for install, hooks, readiness, and policy |
 | `CREDITS.md` | Upstream sources and licenses for every vendored skill |
 
 ## Quickstart
@@ -42,6 +46,12 @@ cd /path/to/your-project
 
 # Optional: include the Cursor rule templates
 ~/agent-engineering-kit/scripts/bootstrap.sh . --with-cursor
+```
+
+Preview every action first without writing anything:
+
+```bash
+~/agent-engineering-kit/scripts/bootstrap.sh . --dry-run
 ```
 
 Then ask your agent in the target repository:
@@ -59,6 +69,13 @@ for the repository's toolchain, integrates the fast commit hook, and checks
 review enforcement. Run `bash .agents/setup-check.sh .`
 to check local readiness. It lists missing steps and exits nonzero until
 local setup is ready. Remote branch protection needs separate verification.
+
+Each missing step prints its own fix. Two shortcuts cover most of them:
+`bash .agents/setup-check.sh . --fix` scaffolds a starter `.agents/verify.sh`
+and installs the fast pre-commit hook, and `.agents/verify-templates/` holds
+editable starters for shell, Node, and Python repositories. Replace every
+`SETUP:` line with a real command before calling setup done — the readiness
+check keeps failing until you do.
 
 If you prefer to set up each part yourself:
 
@@ -206,6 +223,21 @@ The eight performance guards in [docs/04-performance-guards.md](docs/04-performa
 3. Turn on enforcement: `scripts/install-hooks.sh .`, require the `policy / loop evidence` check, set CODEOWNERS — see [docs/07-loop-enforcement.md](docs/07-loop-enforcement.md).
 4. Prune the skills you don't need. A smaller skill set that agents actually load beats a big one they ignore.
 5. Add a skill whenever a workflow has burned you twice: vendor it, adapt the commands, wire it into the routing table. See [docs/05-adding-a-skill.md](docs/05-adding-a-skill.md).
+
+## Working on the kit itself
+
+Contributions run the same loop the kit asks of everyone else. Before opening
+a PR in this repository:
+
+```bash
+bash scripts/lint.sh              # syntax, shellcheck, skill frontmatter, links
+bash tests/setup-smoke.sh         # install, hooks, readiness, policy (slow)
+bash scripts/setup-check.sh --kit # kit dogfood check
+actionlint .github/workflows/kit.yml
+```
+
+`.github/workflows/kit.yml` runs the same checks on every push. Details and
+the contributing rules: [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Credits
 

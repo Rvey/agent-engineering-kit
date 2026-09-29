@@ -1,6 +1,6 @@
 ---
 name: fastapi-python
-description: Expert in FastAPI Python development with best practices for APIs and async operations
+description: Expert in FastAPI Python development with best practices for APIs and async operations. Use when writing, reviewing, or refactoring FastAPI routes, dependency injection, Pydantic schemas, or async database access.
 ---
 
 # FastAPI Python

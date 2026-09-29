@@ -1,6 +1,6 @@
 ---
 name: deslop
-description: "Diff-scoped AI-slop cleanup pass: strip comment slop, defensive-check slop, type-laundering, and style drift from the current branch diff before review."
+description: "Diff-scoped AI-slop cleanup pass: strip comment slop, defensive-check slop, type-laundering, and style drift from the current branch diff before review. Use when a feature is finished but unreviewed, when review comments flag generated-looking code, or before opening a pull request."
 ---
 
 # Deslop

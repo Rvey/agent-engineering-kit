@@ -56,6 +56,12 @@ an agent that doesn't know which gate covers which area will run none of them.
 4. **Record before/after numbers for performance work** — the
    `performance-optimization` skill requires a baseline and re-measurement;
    an optimization without numbers gets reverted.
+5. **Write them once, in one file.** `.agents/verify.sh` holds the commands:
+   fast gates run for `--fast`, slow gates only in the full pass. The hook,
+   CI, and the agent all call that one script, so a gate cannot drift between
+   them. Starters for shell, Node, and Python repos live in
+   `.agents/verify-templates/`; replace every `SETUP:` line before you trust
+   the result.
 
 ## PR readiness checklist
 

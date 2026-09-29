@@ -95,3 +95,36 @@ EOF
   grep -q 'diff checks did not run' "$fixture/command.log"
 )
 echo "Policy requires a valid diff and verification script: PASS"
+
+dry_target="$fixture/dry"
+mkdir "$dry_target"
+git -C "$dry_target" init -q
+bash "$kit/scripts/bootstrap.sh" "$dry_target" --dry-run > "$fixture/dry.log"
+grep -q 'plan' "$fixture/dry.log"
+test ! -e "$dry_target/AGENTS.md"
+test ! -e "$dry_target/.agents"
+echo "Dry-run reports the plan without writing: PASS"
+
+bash "$kit/scripts/setup-check.sh" --kit > "$fixture/kit-check.log"
+grep -q 'Kit self-check: READY' "$fixture/kit-check.log"
+echo "Kit self-check passes on its own checkout: PASS"
+
+fix_target="$fixture/fixtarget"
+mkdir "$fix_target"
+git -C "$fix_target" init -q
+bash "$kit/scripts/bootstrap.sh" "$fix_target" > "$fixture/fix-bootstrap.log"
+test -f "$fix_target/.agents/verify-templates/shell.sh"
+test -f "$fix_target/.agents/verify-templates/node.sh"
+cat > "$fix_target/AGENTS.md" <<'EOF'
+# AGENTS.md — Fix project
+
+Run the repository verification script before review.
+EOF
+(
+  cd "$fix_target"
+  bash .agents/setup-check.sh . --fix > "$fixture/fix.log" 2>&1 || true
+)
+grep -q 'FIXED .agents/verify.sh' "$fixture/fix.log"
+test -x "$fix_target/.agents/verify.sh"
+test "$(git -C "$fix_target" config --get core.hooksPath)" = ".githooks"
+echo "--fix scaffolds the verification script and fast hook: PASS"

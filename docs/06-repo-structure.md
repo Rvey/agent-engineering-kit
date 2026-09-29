@@ -113,3 +113,28 @@ Keep the skeleton, swap the names:
 
 The invariant: **one owner per rule, one gate per layer, contracts defined
 once.**
+
+## The kit repository itself
+
+The kit follows its own layering: instructions route, scripts behave, docs
+explain. Nothing is stated twice.
+
+```
+agent-engineering-kit/
+├── AGENTS.md                    # this repo's real instructions (no placeholders)
+├── templates/
+│   ├── AGENTS.template.md       # the shape copied into other repositories
+│   ├── verify/                  # verify.sh starters: shell, node, python
+│   ├── hooks/pre-commit         # the fast-gate hook
+│   └── github/                  # PR template, policy + gates workflows, CODEOWNERS
+├── .agents/skills/              # vendored skills, one directory per skill
+├── scripts/                     # bootstrap, install-hooks, setup-check, lint, new-skill
+├── tests/setup-smoke.sh         # end-to-end install/behaviour regression
+├── docs/                        # playbooks and the troubleshooting guide
+└── .github/workflows/kit.yml    # the kit's own CI: lint, actionlint, self-check, smoke
+```
+
+Two rules keep this layout honest. Behaviour lives in `scripts/` and is proven
+by `tests/`; every instruction file points at those commands instead of
+describing them again. And `templates/` is the only place other-project
+content belongs — if a file is generic, it ships from there.

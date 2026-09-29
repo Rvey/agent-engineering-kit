@@ -8,14 +8,24 @@ permissions:
   contents: read
 
 jobs:
-  smoke:
+  static:
+    name: static checks
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Check shell syntax
-        run: |
-          for file in scripts/*.sh templates/github/scripts/*.sh templates/hooks/pre-commit tests/*.sh; do
-            bash -n "$file"
-          done
+      - name: Install shellcheck
+        run: sudo apt-get update && sudo apt-get install -y shellcheck
+      - name: Syntax, shellcheck, skills, links
+        run: bash scripts/lint.sh
+      - name: Workflow syntax
+        uses: docker://rhysd/actionlint:1.7.12
+      - name: Kit self-check
+        run: bash scripts/setup-check.sh --kit
+
+  smoke:
+    name: install smoke
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
       - name: Exercise installation and policy
         run: bash tests/setup-smoke.sh

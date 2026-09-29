@@ -36,7 +36,9 @@ randomly and gets disabled the first busy Friday.
 
 The generator (`agents-md` skill) writes `.agents/verify.sh` — the gate
 commands, lint/typecheck first, `test`/`build` behind `--fast`. One command
-list for the hook, the agent, and CI.
+list for the hook, the agent, and CI. Start from the closest starter in
+`.agents/verify-templates/` (`shell.sh`, `node.sh`, `python.sh`) and replace
+every `SETUP:` line; a remaining marker fails `setup-check.sh` on purpose.
 
 Install the pre-commit hook from the target repository:
 

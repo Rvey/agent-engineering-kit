@@ -14,12 +14,17 @@ required checks. A copied template or green policy check alone is incomplete.
    manifests, lockfiles, CI, hooks, and Git remote. Record real lint, type,
    test, and build commands. Read-only inspection comes before installation.
 2. **Install safely.** If needed, run the kit's `scripts/bootstrap.sh` against
-   the repository. Existing files are preserved; a rerun fills missing skill
-   files. Do not use `--force` on authored instructions, workflow files, or
-   custom skills without comparing them first. If a file conflicts, merge it.
+   the repository, with `--dry-run` first when the target has existing hooks,
+   workflows, or instruction files. Existing files are preserved; a rerun
+   fills missing skill files. Do not use `--force` on authored instructions,
+   workflow files, or custom skills without comparing them first. If a file
+   conflicts, merge it.
 3. **Generate instructions and gates.** Follow
    `.agents/skills/agents-md/SKILL.md` to write project-specific `AGENTS.md`
-   and executable `.agents/verify.sh`. Ask the user only for facts the repo
+   and executable `.agents/verify.sh`. Start `.agents/verify.sh` from the
+   closest `.agents/verify-templates/` starter (shell, node, python) and
+   replace every `SETUP:` line with a command traced to real config; an
+   unedited starter is not a setup. Ask the user only for facts the repo
    cannot answer. Never invent commands or retain template placeholders. If a
    gate class has no real command yet, report that gap explicitly.
 4. **Wire CI.** The copied `.github/workflows/gates.yml` runs the full
@@ -28,7 +33,8 @@ required checks. A copied template or green policy check alone is incomplete.
    and gates separate, and run both in CI. On a non-GitHub host, use its
    equivalent pipeline instead.
 5. **Install the local fast gate.** Run `.agents/install-hooks.sh`
-   after `.agents/verify.sh` works. If another hook manager or hook already
+   after `.agents/verify.sh` works, or `.agents/setup-check.sh . --fix` to
+   scaffold the missing pieces first. If another hook manager or hook already
    exists, integrate `bash .agents/verify.sh --fast` there instead of
    replacing it.
 6. **Configure review ownership.** For GitHub, copy

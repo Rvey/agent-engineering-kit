@@ -1,160 +1,62 @@
-# AGENTS.md — <Project Name>
+# AGENTS.md -- agent-engineering-kit
 
-<!--
-agent-engineering-kit:template
+> Kit repo, not a product app. This file describes THIS repo (shell tooling, docs, vendored skills). The distributed template for other repos lives at templates/AGENTS.template.md -- do not copy this file into other projects. Bootstrap copies the template, then the agents-md skill generates project-specific instructions from target-repo evidence.
 
-AGENT — STOP BEFORE COPYING: this is the kit's generic template, not this
-project's instructions. Do NOT copy it verbatim, do NOT leave its
-`<placeholders>`, and do NOT treat its examples as this repo's commands or
-rules. When asked to set up AGENTS.md for a repository, load
-`.agents/skills/agents-md/SKILL.md` and generate the file from the repo's
-actual config and the user's brief. Placeholders mean "unknown — ask or
-omit", never "keep me".
--->
-
-> **Generate, don't copy.** This file ships as a shape for agents to fill
-> from real repo evidence. If it is still unchanged in a project, the setup
-> step was skipped — load `.agents/skills/agents-md/SKILL.md` and generate
-> the project-specific file from the repo's actual config and the user's
-> brief.
-
-Repo-wide instructions for AI coding agents. Stack-specific rules live in
-per-app `AGENTS.md` files (e.g. `apps/web/AGENTS.md`) and in
-`.cursor/rules/*.mdc` (glob-scoped rules for Cursor-compatible agents).
+Shell + docs repo. No runtime, no build, no package manager. Gates below mirror .github/workflows/kit.yml.
 
 ## Skills
 
-Skill lookup order: if a named skill is not installed in the agent's
-environment, fall back to the vendored copy committed at
-`.agents/skills/<name>/SKILL.md` (plus its `references/` subdirectory). Every
-skill referenced below is tracked there — never skip a skill's workflow just
-because the installer lookup failed; read the vendored `SKILL.md` directly.
+Skill lookup: the vendored copy at .agents/skills/<name>/SKILL.md is authoritative. Install the shared catalog once per machine only when a task needs a non-vendored skill (npx --yes skills@0.4.1 add addyosmani/agent-skills --list). When a task needs a skill neither installed nor vendored, ask the user whether to install or vendor it, then wait. Never start skill-governed work with no skill loaded.
 
-Additional skills live upstream — install the shared catalog (one-time per
-machine) so your agent can pull any of them when needed:
-
-```bash
-npx skills add addyosmani/agent-skills            # install the full catalog
-npx skills add addyosmani/agent-skills --list     # browse before installing
-npx skills add addyosmani/agent-skills --skill <name>  # one skill only
-```
-
-Source: `https://github.com/addyosmani/agent-skills` (`skills/` holds the
-SKILL.md workflows, `references/` the shared checklists, `agents/` reviewer
-personas). When a task needs a skill that is neither installed nor vendored,
-ask the user via the native question tool whether to install it
-(`npx skills add <source>`) or vendor it under `.agents/skills/` — then wait
-for the answer. Do not silently proceed without the skill's workflow.
-
-Vendoring rules: a per-skill install copies only `skills/<name>/`, not the
-repo-level `references/` — so when vendoring, also copy any shared checklist
-the skill needs into its `references/`. Every `SKILL.md` needs frontmatter
-(`name`, `description` with a "Use when…") plus workflow steps and
-verification gates. Keep vendored skills specific, verifiable, and minimal.
-
-Skill selection: before starting work, identify which skill owns the task and
-load only that one (plus its `references/` only when the SKILL.md tier is
-insufficient). Never load unrelated skills speculatively, and never start
-skill-governed work (UI, runtime, perf, tests, lint config, review) with no
-skill loaded.
-
-### Task → skill routing
+### Task -> skill routing
 
 | Task | Load before starting |
 |---|---|
-| Generate / refresh this repo's `AGENTS.md` (setup) | `.agents/skills/agents-md/SKILL.md` |
-| Complete kit setup in a target repository | `.agents/skills/full-setup/SKILL.md` |
-| Vague, ambiguous, or underspecified request | `.agents/skills/boost-prompt/SKILL.md` |
-| React/Next UI work | `.agents/skills/react-next-performance/SKILL.md` |
-| FastAPI / Python API work | `.agents/skills/fastapi-python/SKILL.md` |
-| Python hot-path optimization | `.agents/skills/python-performance-optimization/SKILL.md` |
-| Any performance work, any layer | `.agents/skills/performance-optimization/SKILL.md` |
-| Writing, changing, reviewing, or pruning tests | `.agents/skills/test-audit/SKILL.md` |
-| Lint/format configuration | `.agents/skills/eslint-prettier-config/SKILL.md` |
-| Any feature delivered, before review | `.agents/skills/deslop/SKILL.md` |
-| Anything touching input, auth, data, external services, or LLMs | `.agents/skills/security-and-hardening/SKILL.md` |
+| Refresh this repo instructions | .agents/skills/agents-md/SKILL.md |
+| Adopt kit into another repo end-to-end | .agents/skills/full-setup/SKILL.md |
+| Vague request | .agents/skills/boost-prompt/SKILL.md |
+| New skill scaffold or edit | scripts/new-skill.sh + docs/05-adding-a-skill.md |
+| Touch input/auth/data/external/LLM paths | .agents/skills/security-and-hardening/SKILL.md |
+| Add/change tests | .agents/skills/test-audit/SKILL.md |
+| Feature done, before review | .agents/skills/deslop/SKILL.md |
 
-Add a row here the moment a second incident class appears. The routing table
-is the single entry point; if it is not here, agents will not find it.
+React/FastAPI/perf skills are vendored examples for target repos, not for changes in this kit repo. Do not apply their stack rules here.
 
-## Hard rules (learned from real incidents)
+## Hard rules
 
-These are rules, not suggestions. Each one below bit a real production
-codebase before it was written down. Replace the examples with the incidents
-your own team should never repeat — and keep them short, concrete, and
-testable. Full write-up: `docs/04-performance-guards.md`.
-
-1. **No dep-less effects.** Every effect needs a complete dependency array.
-   A mirror effect without deps fired on every canvas drag frame.
-2. **No fresh-identity arrays/objects in dependency arrays.** Derive a scalar
-   key first (`firstKey`, `hasActiveRun`, `arr.join("|")`,
-   `JSON.stringify(obj)` into a named const). Never inline the key computation
-   in the deps array.
-3. **No `setState` per stream token / event / animation frame.** Accumulate
-   locally, commit once per chunk. Cap growing lists (`slice(-N)`).
-4. **No synchronous storage I/O per update.** If persistence is required, it
-   must be debounced (≥500ms), never written per streaming token.
-5. **No double `setState` for the same data in one flow.** If a fetcher sets
-   state internally, don't set it again after awaiting it.
-6. **Hot-path callback identity must be stable.** Handlers fed to canvas
-   libraries or pollers read latest state via refs, never by closing over
-   large arrays/objects.
-7. **Polling timer deps are `[id, booleanFlag, stableCallbacks]`.** Selecting
-   an item must not reset the interval; read selection via a ref inside the tick.
-8. **Projections return input identity when there is no work**
-   (`if (issues.length === 0) return nodes`) and clone only changed items.
+1. Never clobber adopter files. Bootstrap fills missing files; --force overwrites only kit-owned paths, never extra local files. Hooks install refuses when a hook or core.hooksPath already exists.
+2. Fail closed. Missing/invalid .agents/verify.sh or unavailable PR diff is a policy failure, never a pass.
+3. Template stays template. templates/AGENTS.template.md keeps the template marker and placeholders. Root AGENTS.md never contains placeholders.
+4. One source of truth. Routing lives here; skill detail lives in SKILL.md; behavior lives in scripts. Docs link, never restate.
+5. Bash safety. Shell files start with set -euo pipefail, quote expansions, refuse symlink parents/destinations in install paths.
 
 ## Verification (required)
 
-Every gate is a command. "Looks good" is not a gate. Replace the examples
-with your repo's real commands and keep this list in sync with CI.
+Run from repo root. All must pass:
 
-- `<lint command>` — zero errors is the bar. Warn-level size/complexity
-  budgets (`max-lines`, `max-lines-per-function`, `complexity`, …) are
-  tracked refactoring debt, not gate failures; new code should stay inside
-  the budgets.
-- `<typecheck command>` — required after touching typed code.
-- `<test command>` — required after touching the backend/runtime (example:
-  `npm run test:runtime` → `uv run pytest`).
-- `<format command>` — repo formatter stays authoritative.
-- Every lint suppression (`eslint-disable`, `# noqa`, …) MUST carry a comment
-  explaining why the exclusion is intentional. Unexplained suppressions are
-  rejected in review.
+- bash tests/setup-smoke.sh -- disposable-repo install, rerun, hooks, readiness, and policy regression (slow, authoritative).
+- bash scripts/lint.sh -- syntax (bash -n), shellcheck, skill frontmatter + references check, markdown link check.
+- actionlint .github/workflows/kit.yml -- workflow syntax when actionlint is installed.
+- git diff --check -- no whitespace errors.
 
-Design the gates before the code: the command that proves "done" belongs in
-this file and in CI on day one, not after the first regression.
+scripts/setup-check.sh . reports local readiness of THIS checkout; it is not a substitute for the smoke test.
 
-## Where rules live (single source of truth)
+Suppression rule: every shellcheck disable= must carry an explaining comment. Unexplained suppressions fail review.
 
-- **Root `AGENTS.md`** (this file) — routing, gates, and repo-wide hard rules.
-- **`apps/<app>/AGENTS.md`** — stack-specific rules that only apply in one app.
-- **`.cursor/rules/*.mdc`** — glob-scoped rules for Cursor-compatible agents.
-- **`.agents/skills/<name>/SKILL.md`** — deep on-demand workflows.
-- **`docs/`** — decisions, reports, runbooks (ADR-style when decisions need a paper trail).
+## Where rules live
 
-Never copy a rule into two places. If a rule is already enforced in code
-(a registry, a compiler, a config file), instruction files point at it — they
-do not restate it. When a rule changes, change it in its one home and let
-everything else link to it.
+- Root AGENTS.md (this file) -- routing, gates, hard rules for this repo.
+- templates/AGENTS.template.md -- shape shipped to other repos.
+- .agents/skills/*/SKILL.md -- deep workflows.
+- docs/ -- playbooks and runbooks. CONTRIBUTING.md -- contributor steps.
+- scripts/ -- behavior. Instruction files point at scripts, never duplicate logic.
 
 ## Review protocol
 
-A change is not done until all of these are true:
-
-1. The owning skill's workflow was followed (if the task is skill-governed).
-2. The verification gates above pass — paste the actual command output in the
-   handoff.
-3. **Deslop**: run the diff-scoped cleanup pass
-   (`.agents/skills/deslop/SKILL.md`) over the branch diff. Behavior-neutral
-   edits only; report anything risky instead of touching it.
-4. **Security sign-off**: if the change accepts input, touches auth/authz,
-   stores or transmits sensitive data, integrates an external service, adds
-   uploads/webhooks, handles PII/payments, or calls an LLM — walk
-   `.agents/skills/security-and-hardening/references/security-checklist.md`.
-5. **Test audit**: if tests were added or changed, they pass the authoring
-   gate in `.agents/skills/test-audit/SKILL.md`.
-6. **Handoff**: what changed, which gates ran with results, known risks,
-   follow-ups. No silent scope creep.
-7. **PR evidence**: the pull request body carries the Gates, Deslop, and
-   (when sensitive paths changed) Security sections — the repo's `policy`
-   job blocks the merge otherwise.
+1. Owning skill workflow followed, if skill-governed.
+2. Gates above pass -- paste actual command output in handoff.
+3. Deslop pass over branch diff (behavior-neutral edits only).
+4. Security sign-off if sensitive paths changed.
+5. Test audit if tests changed.
+6. Handoff: what changed, gates with results, risks, follow-ups.
+7. PR body carries Gates + Deslop (+ Security when relevant) or policy blocks merge.
