@@ -22,6 +22,8 @@ attribution note in the `SKILL.md`.
 
 ## Instruction layer
 
+The `full-setup` skill is authored in this repository and covered by its MIT license.
+
 The structure of `AGENTS.md` — skill lookup order, task→skill routing,
 verification gates, hard rules, review protocol — and the eight performance
 guards in `docs/04-performance-guards.md` are extracted from a production

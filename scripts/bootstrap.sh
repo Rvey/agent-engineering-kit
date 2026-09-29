@@ -9,13 +9,14 @@
 #     unless --force). The template is a shape, not content: the next step is
 #     to generate the project-specific file with the agents-md skill.
 #   - copies .agents/skills/ into <target-dir>/.agents/skills/
+#   - copies local setup tools under <target-dir>/.agents/
 #   - copies the loop-enforcement files into <target-dir>/.github/
 #     (PR template, no-AI policy workflow + check script, CODEOWNERS example)
 #   - copies .cursor/rules/ templates when --with-cursor is given
 #   - with --skills-only, copies only the skills (no AGENTS.md)
 #   - with --no-github, skips the .github/ files (non-GitHub hosts)
 #
-# Nothing is deleted. Existing files are never overwritten unless --force.
+# Nothing is deleted. --force overwrites matching kit paths, not extra files in skill directories.
 set -euo pipefail
 
 KIT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -25,7 +26,12 @@ WITH_CURSOR=0
 SKILLS_ONLY=0
 WITH_GITHUB=1
 
-for arg in "$@"; do
+if [[ "${1:-}" == --help || "${1:-}" == -h ]]; then
+  awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"
+  exit 0
+fi
+
+for arg in "${@:2}"; do
   case "$arg" in
     --force) FORCE=1 ;;
     --with-cursor) WITH_CURSOR=1 ;;
@@ -35,6 +41,7 @@ for arg in "$@"; do
       awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"
       exit 0
       ;;
+    *) echo "error: unknown option: $arg" >&2; exit 1 ;;
   esac
 done
 
@@ -48,7 +55,7 @@ if [[ ! -d "$TARGET" ]]; then
   exit 1
 fi
 
-TARGET="$(cd "$TARGET" && pwd)"
+TARGET="$(cd "$TARGET" && pwd -P)"
 echo "Installing Agent Engineering Kit"
 echo "  from: $KIT_DIR"
 echo "  into: $TARGET"
@@ -56,6 +63,23 @@ echo
 
 copy_file() {
   local src="$1" dest="$2"
+  local parent
+  parent="$(dirname "$dest")"
+  while [[ "$parent" != "$TARGET" ]]; do
+    if [[ -L "$parent" ]]; then
+      echo "error: refusing symlink parent: $parent" >&2
+      exit 1
+    fi
+    parent="$(dirname "$parent")"
+  done
+  if [[ -L "$dest" ]]; then
+    echo "error: refusing symlink destination: $dest" >&2
+    exit 1
+  fi
+  if [[ -d "$dest" ]]; then
+    echo "error: expected a file destination: $dest" >&2
+    exit 1
+  fi
   if [[ -e "$dest" && "$FORCE" -ne 1 ]]; then
     echo "  skip   $(basename "$dest") (exists — use --force to overwrite)"
   else
@@ -75,23 +99,26 @@ if [[ "$SKILLS_ONLY" -ne 1 ]]; then
   fi
 fi
 
-# Skills: always merged (never deletes), each dir copied individually so a
-# partially-installed target gets topped up.
+# Copy missing files on rerun; --force updates kit files without removing local additions.
 mkdir -p "$TARGET/.agents/skills"
 for skill_dir in "$KIT_DIR"/.agents/skills/*/; do
   name="$(basename "$skill_dir")"
-  if [[ -e "$TARGET/.agents/skills/$name" && "$FORCE" -ne 1 ]]; then
-    echo "  skip   .agents/skills/$name (exists — use --force to overwrite)"
-  else
-    rm -rf "$TARGET/.agents/skills/$name"
-    cp -R "$skill_dir" "$TARGET/.agents/skills/$name"
-    echo "  copy   .agents/skills/$name"
+  if [[ -L "$TARGET/.agents/skills/$name" ]]; then
+    echo "error: refusing symlink skill directory: $name" >&2
+    exit 1
   fi
+  while IFS= read -r -d '' source_file; do
+    relative_file="${source_file#"$KIT_DIR"/}"
+    copy_file "$source_file" "$TARGET/$relative_file"
+  done < <(find "$skill_dir" -type f -print0)
 done
 
 if [[ "$SKILLS_ONLY" -ne 1 ]]; then
   mkdir -p "$TARGET/.agents/skills"
   copy_file "$KIT_DIR/.agents/skills/README.md" "$TARGET/.agents/skills/README.md"
+  copy_file "$KIT_DIR/scripts/install-hooks.sh" "$TARGET/.agents/install-hooks.sh"
+  copy_file "$KIT_DIR/scripts/setup-check.sh" "$TARGET/.agents/setup-check.sh"
+  copy_file "$KIT_DIR/templates/hooks/pre-commit" "$TARGET/.agents/hooks/pre-commit"
 fi
 
 if [[ "$WITH_CURSOR" -eq 1 ]]; then
@@ -103,6 +130,7 @@ fi
 if [[ "$WITH_GITHUB" -eq 1 && "$SKILLS_ONLY" -ne 1 ]]; then
   copy_file "$KIT_DIR/templates/github/pull_request_template.md" "$TARGET/.github/pull_request_template.md"
   copy_file "$KIT_DIR/templates/github/workflows/policy.yml" "$TARGET/.github/workflows/policy.yml"
+  copy_file "$KIT_DIR/templates/github/workflows/gates.yml" "$TARGET/.github/workflows/gates.yml"
   copy_file "$KIT_DIR/templates/github/scripts/policy-check.sh" "$TARGET/.github/scripts/policy-check.sh"
   copy_file "$KIT_DIR/templates/github/CODEOWNERS.example" "$TARGET/.github/CODEOWNERS.example"
 fi
@@ -110,32 +138,12 @@ fi
 cat <<'NEXT'
 
 Next steps
-  1. Generate this repo's AGENTS.md. Open your agent in the target repo and
-     paste (fill in what you know; leave out what you don't):
-
-         Generate this repo's AGENTS.md. Follow
-         .agents/skills/agents-md/SKILL.md.
-
-         Brief: we built <what it is>. Stack: <stack>. Layout: <where
-         things live>. Commands: lint=<cmd>, typecheck=<cmd>, test=<cmd>.
-         Things agents keep getting wrong: <incidents, if any>.
-
-     No brief? Paste instead:
-         Generate this repo's AGENTS.md. No brief — derive everything from
-         the repo. Follow .agents/skills/agents-md/SKILL.md.
-
-     The generator replaces the template, traces every gate command to real
-     config, and asks instead of guessing. It will not ship placeholders.
-     Full instructions: README.md → Generate AGENTS.md.
-  2. Install the pre-commit hook (runs the fast gates before each commit):
-         scripts/install-hooks.sh <this-project>     # run from the kit
-  3. Wire the gate commands into CI and require the "policy / loop evidence"
-     check in branch protection. Rename .github/CODEOWNERS.example to
-     .github/CODEOWNERS and set real owners. Why it works this way:
-     docs/07-loop-enforcement.md.
-  4. Start agent sessions with: "Read AGENTS.md and follow it."
-  5. When a workflow burns you twice, add a skill (scripts/new-skill.sh) and a
-     routing row in AGENTS.md.
+  1. In the target repo, ask your agent:
+         Complete this repository's Agent Engineering Kit setup. Follow
+         .agents/skills/full-setup/SKILL.md. Derive unknowns from the repo;
+         ask me only for facts or permissions you cannot determine.
+  2. Check local readiness with bash .agents/setup-check.sh .
+  3. Start future sessions with: "Read AGENTS.md and follow it."
 
 Docs: docs/01-agent-workflow.md (the loop), docs/03-verification-gates.md
 (gates), docs/04-performance-guards.md (the hard rules), docs/05-adding-a-skill.md,

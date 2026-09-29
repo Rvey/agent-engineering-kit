@@ -63,6 +63,7 @@ skill loaded.
 | Task | Load before starting |
 |---|---|
 | Generate / refresh this repo's `AGENTS.md` (setup) | `.agents/skills/agents-md/SKILL.md` |
+| Complete kit setup in a target repository | `.agents/skills/full-setup/SKILL.md` |
 | Vague, ambiguous, or underspecified request | `.agents/skills/boost-prompt/SKILL.md` |
 | React/Next UI work | `.agents/skills/react-next-performance/SKILL.md` |
 | FastAPI / Python API work | `.agents/skills/fastapi-python/SKILL.md` |

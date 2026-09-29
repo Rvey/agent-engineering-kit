@@ -23,7 +23,6 @@ SCAN_EXTENSIONS="${SCAN_EXTENSIONS:-}"
 
 FAILED=0
 err()  { printf '::error::%s\n' "$1"; FAILED=1; }
-warn() { printf '::warning::%s\n' "$1"; }
 ok()   { printf '  ok: %s\n' "$1"; }
 
 echo "policy check: loop evidence"
@@ -71,10 +70,13 @@ have_diff=0
 if [[ -n "$BASE_SHA" && -n "$HEAD_SHA" ]] \
   && git rev-parse -q --verify "${BASE_SHA}^{commit}" >/dev/null 2>&1 \
   && git rev-parse -q --verify "${HEAD_SHA}^{commit}" >/dev/null 2>&1; then
-  changed_files="$(git diff --name-only "$BASE_SHA...$HEAD_SHA" 2>/dev/null || true)"
-  have_diff=1
+  if changed_files="$(git diff --name-only "$BASE_SHA...$HEAD_SHA" 2>/dev/null)"; then
+    have_diff=1
+  else
+    err "cannot compare base and head commits; diff checks did not run"
+  fi
 else
-  warn "base/head SHA unavailable — skipping diff-based checks"
+  err "base/head SHA unavailable — diff checks did not run"
 fi
 
 if (( have_diff )) && [[ -n "$SENSITIVE_PATTERNS" && -n "$changed_files" ]] \
@@ -141,7 +143,11 @@ else
   ok "AGENTS.md generated"
 fi
 
-[[ -f .agents/verify.sh ]] || warn ".agents/verify.sh missing — regenerate AGENTS.md so hooks and CI run the same gate commands"
+if [[ ! -f .agents/verify.sh ]] || ! bash -n .agents/verify.sh 2>/dev/null; then
+  err ".agents/verify.sh is missing or invalid — generate it before opening a PR"
+else
+  ok "verification script exists and parses"
+fi
 
 # --- verdict -----------------------------------------------------------------
 

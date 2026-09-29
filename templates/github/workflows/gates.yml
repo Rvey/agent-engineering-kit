@@ -1,0 +1,19 @@
+name: gates
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: verification gates
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      # SETUP: replace this with the repo's toolchain and locked dependency install.
+      - name: Run repository gates
+        run: bash .agents/verify.sh

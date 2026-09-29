@@ -22,16 +22,17 @@ This kit packages all four into files you drop into any new project.
 | Path | What it is |
 |---|---|
 | `AGENTS.md` | The routing table for agents: skill selection, verification gates, hard rules, review protocol. **Generate it from your repo first — don't copy the template.** |
-| `.agents/skills/` | 10 vendored skills (`SKILL.md` + references) covering AGENTS.md generation, prompt refinement, React/Next perf, FastAPI, Python perf, performance work, security, tests, lint config, and diff cleanup |
+| `.agents/skills/` | 11 vendored skills (`SKILL.md` + references) covering full setup, AGENTS.md generation, prompt refinement, React/Next perf, FastAPI, Python perf, performance work, security, tests, lint config, and diff cleanup |
 | `.cursor/rules/` | Glob-scoped rule templates for Cursor-compatible agents (web app + Python runtime) |
-| `templates/github/` | Loop-enforcement files copied by bootstrap: PR template, no-AI policy workflow + check script, CODEOWNERS example |
+| `templates/github/` | Loop-enforcement files copied by bootstrap: PR template, CI gate and policy workflows, check script, CODEOWNERS example |
 | `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement |
 | `scripts/bootstrap.sh` | Installs the kit into any repository in one command |
 | `scripts/install-hooks.sh` | Installs a pre-commit hook that runs the fast gates (`.agents/verify.sh --fast`) |
+| `scripts/setup-check.sh` | Reports local setup status and names missing steps |
 | `scripts/new-skill.sh` | Scaffolds a correctly shaped new skill |
 | `CREDITS.md` | Upstream sources and licenses for every vendored skill |
 
-## Quickstart (5 minutes)
+## Quickstart
 
 ```bash
 git clone https://github.com/Rvey/agent-engineering-kit.git ~/agent-engineering-kit
@@ -43,12 +44,28 @@ cd /path/to/your-project
 ~/agent-engineering-kit/scripts/bootstrap.sh . --with-cursor
 ```
 
-Then, in order:
+Then ask your agent in the target repository:
+
+```text
+Complete this repository's Agent Engineering Kit setup. Follow
+.agents/skills/full-setup/SKILL.md. Derive facts from the repo and ask me
+only for information you cannot determine. Verify both local and remote setup.
+```
+
+Bootstrap also copies the hook installer and readiness check into `.agents/`,
+so the target repository has the commands it needs after adoption. The agent
+generates project-specific instructions and gates, configures CI
+for the repository's toolchain, integrates the fast commit hook, and checks
+review enforcement. Run `bash .agents/setup-check.sh .`
+to check local readiness. It lists missing steps and exits nonzero until
+local setup is ready. Remote branch protection needs separate verification.
+
+If you prefer to set up each part yourself:
 
 1. **Generate `AGENTS.md`** — open your agent in the project and run the
    generation prompt. Full instructions and copy-paste prompts:
    [Generate `AGENTS.md`](#generate-agentsmd).
-2. **Define your verification gates** — see [docs/03-verification-gates.md](docs/03-verification-gates.md). Wire the commands into CI and require the checks in branch protection.
+2. **Define your verification gates** — see [docs/03-verification-gates.md](docs/03-verification-gates.md). The copied `gates.yml` runs `.agents/verify.sh`; add your repo's toolchain and dependency install, then require both gate and policy checks in branch protection.
 3. **Turn on loop enforcement** — install the pre-commit hook
    (`~/agent-engineering-kit/scripts/install-hooks.sh .`), require the
    `policy / loop evidence` check in branch protection, and rename
@@ -165,6 +182,7 @@ Full walkthrough: [docs/01-agent-workflow.md](docs/01-agent-workflow.md).
 | Skill | Load it when |
 |---|---|
 | `agents-md` | Setting up or refreshing a repo's `AGENTS.md`; template has placeholders; onboarding a project |
+| `full-setup` | Completing kit adoption, including CI, hooks, and required review checks |
 | `boost-prompt` | The request is vague or missing scope/deliverables/constraints |
 | `react-next-performance` | Writing or reviewing React/Next client components, hooks, effects, streaming UI, canvas code |
 | `fastapi-python` | Writing or reviewing FastAPI/Python API code |

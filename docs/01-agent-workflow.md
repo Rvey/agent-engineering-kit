@@ -11,7 +11,8 @@ intake → brief (if vague) → load ONE skill → ground → implement
 
 ## Stage 0 — Setup (once per repo)
 
-1. Drop the kit in (`scripts/bootstrap.sh`).
+1. Drop the kit in (`scripts/bootstrap.sh`), then follow the vendored
+   `full-setup` skill for instruction generation, gates, hooks, and review settings.
 2. Generate `AGENTS.md` with the `agents-md` skill — brief or repo evidence
    in, real commands and the project's own incident rules out. Never copy the
    template; the skill's anti-slop gate rejects placeholder or generic output.

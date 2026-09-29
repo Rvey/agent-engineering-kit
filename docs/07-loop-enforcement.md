@@ -30,6 +30,7 @@ randomly and gets disabled the first busy Friday.
 |---|---|
 | `pull_request_template.md` | Requires `## Gates`, `## Deslop`, and (when needed) `## Security` sections with real content |
 | `workflows/policy.yml` | The no-AI CI job (`policy / loop evidence`) — runs the checks on PR open/edit/push |
+| `workflows/gates.yml` | Runs `.agents/verify.sh`; add the target repo's toolchain and dependency installation |
 | `scripts/policy-check.sh` | The check logic: PR evidence, suppression reasons, generated `AGENTS.md` |
 | `CODEOWNERS.example` | Rename to `CODEOWNERS` + real owners → security paths force human review |
 
@@ -37,10 +38,10 @@ The generator (`agents-md` skill) writes `.agents/verify.sh` — the gate
 commands, lint/typecheck first, `test`/`build` behind `--fast`. One command
 list for the hook, the agent, and CI.
 
-Install the pre-commit hook (run from the kit):
+Install the pre-commit hook from the target repository:
 
 ```bash
-scripts/install-hooks.sh /path/to/your-project
+bash .agents/install-hooks.sh .
 # hook runs: bash .agents/verify.sh --fast  — fast gates before every commit
 ```
 
@@ -48,8 +49,9 @@ scripts/install-hooks.sh /path/to/your-project
 
 In the repo settings, protect the main branch:
 
-1. Require status checks: the `policy / loop evidence` check (plus your
-   `gates` workflow once wired per [docs/03](03-verification-gates.md)).
+1. Require status checks: `policy / loop evidence` and
+   `gates / verification gates` once the target toolchain is wired per
+   [docs/03](03-verification-gates.md).
 2. Require a pull request before merging, with at least one approval.
 3. Enable **Require review from Code Owners** after renaming
    `CODEOWNERS.example`.
@@ -88,11 +90,12 @@ increasing cost:
 
 ## Adoption checklist
 
-- [ ] `scripts/bootstrap.sh` run (copies the four `.github/` files)
+- [ ] `scripts/bootstrap.sh` run (copies the five `.github/` files)
 - [ ] `AGENTS.md` generated (`agents-md` skill) so the policy's AGENTS.md check passes
 - [ ] `.agents/verify.sh` written by the generator
+- [ ] `gates.yml` installs the target repo's toolchain and successfully runs `.agents/verify.sh`
 - [ ] `scripts/install-hooks.sh <project>` run
 - [ ] Gate workflow wired and required (docs/03)
-- [ ] `policy / loop evidence` required in branch protection
+- [ ] `policy / loop evidence` and `gates / verification gates` required in branch protection
 - [ ] `CODEOWNERS` renamed and owners set
 - [ ] First PR opened to confirm the policy job fails on a blank body

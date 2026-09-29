@@ -11,6 +11,7 @@ actually find them.
 | Skill | Owns | Tier-2 references |
 |---|---|---|
 | `agents-md` | Generating a project-specific `AGENTS.md` from a brief or the repo; anti-template verification | — |
+| `full-setup` | Completing adoption, CI gates, hooks, and review enforcement | — |
 | `boost-prompt` | Turning vague requests into a structured brief before any code is written | — |
 | `deslop` | Diff-scoped cleanup of AI slop after a feature lands, before review | — |
 | `react-next-performance` | React 19 / Next.js client work: effects, memo discipline, streaming UI, canvas code | — |

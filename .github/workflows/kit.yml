@@ -1,0 +1,21 @@
+name: kit checks
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
+        run: |
+          for file in scripts/*.sh templates/github/scripts/*.sh templates/hooks/pre-commit tests/*.sh; do
+            bash -n "$file"
+          done
+      - name: Exercise installation and policy
+        run: bash tests/setup-smoke.sh
