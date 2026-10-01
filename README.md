@@ -227,6 +227,18 @@ The eight performance guards in [docs/04-performance-guards.md](docs/04-performa
 4. Prune the skills you don't need. A smaller skill set that agents actually load beats a big one they ignore.
 5. Add a skill whenever a workflow has burned you twice: vendor it, adapt the commands, wire it into the routing table. See [docs/05-adding-a-skill.md](docs/05-adding-a-skill.md).
 
+### Updating an existing install
+
+When the kit ships new skills, pull them into a project that already adopted it:
+
+```bash
+# Preview, then copy the new skills (missing files copy without --force)
+~/agent-engineering-kit/scripts/bootstrap.sh . --skills-only --dry-run
+~/agent-engineering-kit/scripts/bootstrap.sh . --skills-only
+```
+
+Add `--force` to also refresh already-vendored skill files to their kit version — it overwrites only matching kit paths, never your extra local files. `--skills-only` never touches your generated `AGENTS.md`; merge the new routing rows from the kit's `templates/AGENTS.template.md` into it by hand (or ask your agent to merge them) instead of forcing a full bootstrap, which would overwrite it with the blank template. The same applies to `.agents/skills/README.md` if you edited it. Then run `bash .agents/setup-check.sh .` to confirm readiness.
+
 ## Working on the kit itself
 
 Contributions run the same loop the kit asks of everyone else. Before opening
