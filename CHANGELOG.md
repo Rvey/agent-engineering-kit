@@ -7,6 +7,13 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Added
 
+- Vendored `context-engineering`, `frontend-ui-engineering` (with
+  `references/accessibility-checklist.md`), and `documentation-and-adrs` from
+  [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT).
+  Bootstrap copies them into adopters via the existing skills loop; the
+  template routing table, skill catalog, README, and CREDITS list them.
+  `performance-optimization` was already vendored from the same catalog and
+  verified current (only the intentional `references/` link rewrite differs).
 - `templates/verify/` starters for shell, Node, and Python repositories, copied
   into adopters as `.agents/verify-templates/`. Each carries `SETUP:` markers
   on the lines a human still has to edit.

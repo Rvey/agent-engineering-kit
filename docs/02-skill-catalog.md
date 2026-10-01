@@ -13,6 +13,9 @@ actually find them.
 | `agents-md` | Generating a project-specific `AGENTS.md` from a brief or the repo; anti-template verification | — |
 | `full-setup` | Completing adoption, CI gates, hooks, and review enforcement | — |
 | `boost-prompt` | Turning vague requests into a structured brief before any code is written | — |
+| `context-engineering` | Session start / task switch / quality drop — curating rules, specs, and task context | — |
+| `frontend-ui-engineering` | Production-quality UI: design system, layout, a11y, anti-AI-slop | `references/accessibility-checklist.md` |
+| `documentation-and-adrs` | ADRs, public API docs, shipped-behavior notes and changelogs | — |
 | `deslop` | Diff-scoped cleanup of AI slop after a feature lands, before review | — |
 | `react-next-performance` | React 19 / Next.js client work: effects, memo discipline, streaming UI, canvas code | — |
 | `fastapi-python` | FastAPI + async Python API conventions | — |

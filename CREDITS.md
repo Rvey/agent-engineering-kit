@@ -16,6 +16,9 @@ attribution note in the `SKILL.md`.
 | `eslint-prettier-config` | [patricio0312rev/skills](https://github.com/patricio0312rev/skills) | MIT | Vendored |
 | `fastapi-python` | [Mindrally/skills](https://github.com/Mindrally/skills) | Apache-2.0 | Vendored (changed: packaged as a skill with usage frontmatter) |
 | `performance-optimization` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | MIT | Vendored with its checklist |
+| `context-engineering` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) `skills/context-engineering` | MIT | Vendored |
+| `frontend-ui-engineering` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) `skills/frontend-ui-engineering` | MIT | Vendored with `references/accessibility-checklist.md` |
+| `documentation-and-adrs` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) `skills/documentation-and-adrs` | MIT | Vendored |
 | `security-and-hardening` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | MIT | Vendored with shared checklist + hardening patterns |
 | `python-performance-optimization` | [wshobson/agents](https://github.com/wshobson/agents) `plugins/python-development/skills` | MIT | Vendored with `references/` |
 | `react-next-performance` | Authored in-house | MIT (this repo) | Written from real production incidents; React Flow section is canvas-specific but generalizes to any canvas library |

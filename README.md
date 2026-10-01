@@ -23,7 +23,7 @@ This kit packages all four into files you drop into any new project.
 |---|---|
 | `templates/AGENTS.template.md` | The starting shape for another repo's `AGENTS.md`: routing table, gates, hard rules, review protocol. **Generate the real file from your repo — don't keep the placeholders.** |
 | `AGENTS.md` | This kit repo's own instructions, generated from its real layout and gates. Not the template — see the row above. |
-| `.agents/skills/` | 11 vendored skills (`SKILL.md` + references) covering full setup, AGENTS.md generation, prompt refinement, React/Next perf, FastAPI, Python perf, performance work, security, tests, lint config, and diff cleanup |
+| `.agents/skills/` | 14 vendored skills (`SKILL.md` + references) covering full setup, AGENTS.md generation, prompt refinement, context setup, UI engineering, ADRs/docs, React/Next perf, FastAPI, Python perf, performance work, security, tests, lint config, and diff cleanup |
 | `.cursor/rules/` | Glob-scoped rule templates for Cursor-compatible agents (web app + Python runtime) |
 | `templates/github/` | Loop-enforcement files copied by bootstrap: PR template, CI gate and policy workflows, check script, CODEOWNERS example |
 | `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement, troubleshooting |
@@ -201,6 +201,9 @@ Full walkthrough: [docs/01-agent-workflow.md](docs/01-agent-workflow.md).
 | `agents-md` | Setting up or refreshing a repo's `AGENTS.md`; template has placeholders; onboarding a project |
 | `full-setup` | Completing kit adoption, including CI, hooks, and required review checks |
 | `boost-prompt` | The request is vague or missing scope/deliverables/constraints |
+| `context-engineering` | Starting a session, switching tasks, or output quality drops |
+| `frontend-ui-engineering` | Building or modifying user-facing UI (design system, layout, a11y, anti-slop) |
+| `documentation-and-adrs` | Recording a decision, changing a public API, shipping user-facing behavior |
 | `react-next-performance` | Writing or reviewing React/Next client components, hooks, effects, streaming UI, canvas code |
 | `fastapi-python` | Writing or reviewing FastAPI/Python API code |
 | `python-performance-optimization` | Profiling or optimizing Python hot paths |

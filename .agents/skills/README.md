@@ -15,6 +15,9 @@ directly when an installed skill is not available.
 | `agents-md` | Setting up / refreshing a repo's `AGENTS.md`; template placeholders remain; onboarding a project | — |
 | `full-setup` | Completing kit adoption, CI, hooks, and review enforcement in a target repo | — |
 | `boost-prompt` | Request is vague / missing scope, deliverables, constraints, or success criteria | — |
+| `context-engineering` | Starting a session, switching tasks, or output quality drops; configuring rules/context | — |
+| `frontend-ui-engineering` | Building or modifying user-facing UI (design system, layout, a11y, anti-slop) | `references/accessibility-checklist.md` |
+| `documentation-and-adrs` | Recording architecture decisions, changing public APIs, shipping user-facing behavior | — |
 | `deslop` | Feature complete, pre-review: strip AI slop from the branch diff (behavior-neutral) | — |
 | `eslint-prettier-config` | Setting up or changing ESLint/Prettier (flat config, integration, scripts, hooks) | — |
 | `fastapi-python` | Writing or reviewing FastAPI + async Python API code | — |
@@ -33,6 +36,9 @@ Full attribution and licenses: [`../../CREDITS.md`](../../CREDITS.md).
 | `agents-md` | Authored in-house | Generator workflow: brief or repo evidence → project-specific AGENTS.md, with anti-template verification gates |
 | `full-setup` | Authored in-house | Complete adoption workflow with local and remote readiness checks |
 | `boost-prompt` | github/awesome-copilot (MIT) | Native question tool + chat output instead of Joyride/VSCode; repo grounding + brief template |
+| `context-engineering` | addyosmani/agent-skills (MIT) | Vendored; `../../references/` links rewritten to local `references/` where needed |
+| `frontend-ui-engineering` | addyosmani/agent-skills (MIT) | Vendored with `references/accessibility-checklist.md` |
+| `documentation-and-adrs` | addyosmani/agent-skills (MIT) | Vendored |
 | `deslop` | openclaw/agent-skills (MIT) | Internal review-gate and linter references generalized |
 | `test-audit` | openclaw/agent-skills (MIT) | Source-repo scripts generalized; campaign doc kept with real examples |
 | `eslint-prettier-config` | patricio0312rev/skills (MIT) | Vendored |
@@ -52,7 +58,7 @@ npx skills add addyosmani/agent-skills --skill <name>
 
 Relevant catalog entries beyond this set: `using-agent-skills` (how to map
 work → skill), `test-driven-development`, `debugging-and-error-recovery`,
-`code-review-and-quality`, `documentation-and-adrs`,
+`code-review-and-quality`,
 `git-workflow-and-versioning`.
 
 ## Vendoring rules

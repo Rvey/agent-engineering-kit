@@ -55,8 +55,8 @@ verification gates. Keep vendored skills specific, verifiable, and minimal.
 Skill selection: before starting work, identify which skill owns the task and
 load only that one (plus its `references/` only when the SKILL.md tier is
 insufficient). Never load unrelated skills speculatively, and never start
-skill-governed work (UI, runtime, perf, tests, lint config, review) with no
-skill loaded.
+skill-governed work (UI, runtime, perf, tests, lint config, docs, context,
+review) with no skill loaded.
 
 ### Task → skill routing
 
@@ -65,6 +65,9 @@ skill loaded.
 | Generate / refresh this repo's `AGENTS.md` (setup) | `.agents/skills/agents-md/SKILL.md` |
 | Complete kit setup in a target repository | `.agents/skills/full-setup/SKILL.md` |
 | Vague, ambiguous, or underspecified request | `.agents/skills/boost-prompt/SKILL.md` |
+| Starting a session, switching tasks, or output quality drops | `.agents/skills/context-engineering/SKILL.md` |
+| Building or modifying user-facing UI (design system, layout, a11y, anti-slop) | `.agents/skills/frontend-ui-engineering/SKILL.md` |
+| Recording an architecture decision, changing a public API, shipping user-facing behavior | `.agents/skills/documentation-and-adrs/SKILL.md` |
 | React/Next UI work | `.agents/skills/react-next-performance/SKILL.md` |
 | FastAPI / Python API work | `.agents/skills/fastapi-python/SKILL.md` |
 | Python hot-path optimization | `.agents/skills/python-performance-optimization/SKILL.md` |
