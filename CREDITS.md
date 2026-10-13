@@ -27,6 +27,11 @@ attribution note in the `SKILL.md`.
 
 The `full-setup` skill is authored in this repository and covered by its MIT license.
 
+The `bruh` skill is authored in this repository and covered by its MIT license.
+Its rules are grounded in published research cited in
+`.agents/skills/bruh/references/research.md`; no text is vendored from those
+sources.
+
 The structure of `AGENTS.md` — skill lookup order, task→skill routing,
 verification gates, hard rules, review protocol — and the eight performance
 guards in `docs/04-performance-guards.md` are extracted from a production

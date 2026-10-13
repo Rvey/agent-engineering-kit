@@ -23,6 +23,7 @@ actually find them.
 | `performance-optimization` | Measure → identify → fix → verify → guard, any layer | `references/performance-checklist.md` |
 | `security-and-hardening` | Threat-model-first hardening: OWASP Top 10 + LLM Top 10, secrets, supply chain, privacy | `references/hardening-patterns.md`, `references/security-checklist.md` |
 | `test-audit` | Test authoring gate + pruning audits | `CAMPAIGN.md` (subsystem-wide prunes) |
+| `bruh` | Explaining dense text or jargon for engineers with ADHD: point first, mental model, real terms kept | `references/research.md` |
 | `eslint-prettier-config` | ESLint flat config + Prettier integration | — |
 
 ## How loading works

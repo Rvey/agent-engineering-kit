@@ -26,6 +26,7 @@ directly when an installed skill is not available.
 | `react-next-performance` | React/Next client components, hooks, effects, stream UIs, canvas code | — |
 | `security-and-hardening` | Input handling, auth/authz, sensitive data, external integrations, LLM features | `references/hardening-patterns.md`, `references/security-checklist.md` |
 | `test-audit` | Writing/changing/reviewing tests; pruning low-value tests | `CAMPAIGN.md` (whole-subsystem prunes) |
+| `bruh` | Dense LLM output, specs, logs, or unfamiliar-domain jargon needs a short, ADHD-friendly explanation for engineers | `references/research.md` |
 
 ## Provenance & adaptation
 
@@ -47,6 +48,7 @@ Full attribution and licenses: [`../../CREDITS.md`](../../CREDITS.md).
 | `security-and-hardening` | addyosmani/agent-skills (MIT) | Vendored with shared checklist + patterns |
 | `python-performance-optimization` | wshobson/agents (MIT) | Vendored with references |
 | `react-next-performance` | Authored in-house | Written from production incidents |
+| `bruh` | Authored in-house | Rules grounded in ADHD, cognitive-load, and learning research; evidence in `references/research.md` |
 
 ## Installing more skills from upstream
 

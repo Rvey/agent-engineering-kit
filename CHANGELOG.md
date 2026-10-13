@@ -7,6 +7,10 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Added
 
+- `bruh` skill: turns dense LLM output, specs, logs, and unfamiliar-domain
+  jargon into short, ADHD-friendly explanations for engineers. It keeps the
+  real terms and explains the mechanism so the reader learns, with each rule
+  tied to research in `references/research.md`.
 - Vendored `context-engineering`, `frontend-ui-engineering` (with
   `references/accessibility-checklist.md`), and `documentation-and-adrs` from
   [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) (MIT).

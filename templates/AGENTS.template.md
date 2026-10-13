@@ -76,6 +76,7 @@ review) with no skill loaded.
 | Lint/format configuration | `.agents/skills/eslint-prettier-config/SKILL.md` |
 | Any feature delivered, before review | `.agents/skills/deslop/SKILL.md` |
 | Anything touching input, auth, data, external services, or LLMs | `.agents/skills/security-and-hardening/SKILL.md` |
+| Dense output, spec, log, or jargon the user asks to have explained simply | `.agents/skills/bruh/SKILL.md` |
 
 Add a row here the moment a second incident class appears. The routing table
 is the single entry point; if it is not here, agents will not find it.
