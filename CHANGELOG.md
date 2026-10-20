@@ -55,6 +55,19 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Fixed
 
+- `policy-check.sh` failed open in three ways: a root-level file such as
+  `vite.config.ts` globbed `*.ts` down to that one file and skipped nested
+  suppressions; git-quoted non-ASCII paths dodged the sensitive-path match
+  and the suppression scan; and renaming a file out of `auth/` listed only the
+  new path. It now reads unquoted NUL-separated names with `--no-renames`,
+  splits `SCAN_EXTENSIONS` without globbing, and keeps raw filenames on one
+  `::error::` line.
+- `bootstrap.sh --force` wrote through a hard-linked destination, overwriting
+  the linked file even outside the target. It now refuses hard-linked and
+  non-regular destinations.
+- `CODEOWNERS.example` and docs/07 now cover `/.github/scripts/`: the policy
+  job runs the PR's own checker, so only Code Owner review stops a PR from
+  rewriting it.
 - `reference/advanced-patterns.md` link inside
   `.agents/skills/python-performance-optimization/references/details.md`
   resolved to a non-existent nested path.

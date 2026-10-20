@@ -62,6 +62,12 @@ In the repo settings, protect the main branch:
 
 Without step 1 the policy job runs but nobody must obey it.
 
+The policy job runs on `pull_request`, so it executes the PR's own copy of
+`policy.yml` and `.github/scripts/policy-check.sh`. A PR can rewrite the check
+that judges it; step 3 is what stops that. Keep the `/.github/workflows/`,
+`/.github/scripts/`, and `/.agents/` lines in `CODEOWNERS` owned by
+maintainers.
+
 ## Escape hatches (for maintainers)
 
 - **`policy:skip` label** — skips the policy job. Anyone with triage/write can

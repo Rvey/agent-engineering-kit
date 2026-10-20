@@ -22,8 +22,11 @@ SENSITIVE_PATTERNS="${SENSITIVE_PATTERNS:-}"
 SCAN_EXTENSIONS="${SCAN_EXTENSIONS:-}"
 
 FAILED=0
-err()  { printf '::error::%s\n' "$1"; FAILED=1; }
-ok()   { printf '  ok: %s\n' "$1"; }
+# Paths are printed raw (no git quoting), so flatten line breaks: a newline
+# in a filename must not start a new ::workflow-command:: line.
+oneline() { local s="${1//$'\n'/ }"; printf '%s' "${s//$'\r'/ }"; }
+err()  { printf '::error::%s\n' "$(oneline "$1")"; FAILED=1; }
+ok()   { printf '  ok: %s\n' "$(oneline "$1")"; }
 
 echo "policy check: loop evidence"
 
@@ -70,7 +73,9 @@ have_diff=0
 if [[ -n "$BASE_SHA" && -n "$HEAD_SHA" ]] \
   && git rev-parse -q --verify "${BASE_SHA}^{commit}" >/dev/null 2>&1 \
   && git rev-parse -q --verify "${HEAD_SHA}^{commit}" >/dev/null 2>&1; then
-  if changed_files="$(git diff --name-only "$BASE_SHA...$HEAD_SHA" 2>/dev/null)"; then
+  # Unquoted NUL-separated names (quoted names break the ^ anchors), and no
+  # rename detection so a move out of a sensitive path still lists the source.
+  if changed_files="$(git -c core.quotePath=false diff -z --name-only --no-renames "$BASE_SHA...$HEAD_SHA" 2>/dev/null | tr '\0' '\n')"; then
     have_diff=1
   else
     err "cannot compare base and head commits; diff checks did not run"
@@ -101,10 +106,10 @@ reason_above() {
 }
 
 if (( have_diff )) && [[ -n "$SCAN_EXTENSIONS" ]]; then
-  exts=()
-  for e in $SCAN_EXTENSIONS; do exts+=("$e"); done
-  files="$(git diff --name-only --diff-filter=ACMR "$BASE_SHA...$HEAD_SHA" -- "${exts[@]}" 2>/dev/null || true)"
-  while IFS= read -r file; do
+  # read -a splits without pathname expansion: '*.ts' must reach git as a
+  # pathspec, not be globbed against files in the repo root.
+  read -r -a exts <<< "$SCAN_EXTENSIONS"
+  while IFS= read -r -d '' file; do
     [[ -z "$file" ]] && continue
     prev=""
     while IFS= read -r line; do
@@ -126,8 +131,8 @@ if (( have_diff )) && [[ -n "$SCAN_EXTENSIONS" ]]; then
         fi
       fi
       prev="$line"
-    done < <(git diff --unified=0 "$BASE_SHA...$HEAD_SHA" -- "$file" 2>/dev/null | grep -E '^\+' | grep -vE '^\+\+\+' | sed 's/^+//')
-  done <<< "$files"
+    done < <(git --literal-pathspecs diff --unified=0 "$BASE_SHA...$HEAD_SHA" -- "$file" 2>/dev/null | grep -E '^\+' | grep -vE '^\+\+\+' | sed 's/^+//')
+  done < <(git -c core.quotePath=false diff -z --name-only --no-renames --diff-filter=ACM "$BASE_SHA...$HEAD_SHA" -- "${exts[@]}" 2>/dev/null || true)
 fi
 
 # --- 3. AGENTS.md must be generated, not copied ------------------------------

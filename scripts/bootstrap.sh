@@ -83,6 +83,13 @@ copy_file() {
     echo "error: expected a file destination: $dest" >&2
     exit 1
   fi
+  # cp writes into the existing inode, so --force must not follow a hard
+  # link (or open a FIFO/device) to a file outside the kit's ownership.
+  if [[ -e "$dest" && "$FORCE" -eq 1 ]] \
+    && [[ ! -f "$dest" || -n "$(find "$dest" -prune -links +1)" ]]; then
+    echo "error: refusing hard-linked or non-regular destination: $dest" >&2
+    exit 1
+  fi
   if [[ -e "$dest" && "$FORCE" -ne 1 ]]; then
     echo "  skip   $(basename "$dest") (exists — use --force to overwrite)"
   elif [[ "$DRY" -eq 1 ]]; then

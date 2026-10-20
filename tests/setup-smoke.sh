@@ -30,6 +30,16 @@ bash "$kit/scripts/bootstrap.sh" "$target" --force > "$fixture/command.log"
 test -f "$target/.agents/skills/deslop/local.md"
 echo "Installer reruns and force preserve local additions: PASS"
 
+echo 'outside the kit' > "$fixture/victim.txt"
+rm "$target/.agents/skills/deslop/SKILL.md"
+ln "$fixture/victim.txt" "$target/.agents/skills/deslop/SKILL.md"
+expect_failure bash "$kit/scripts/bootstrap.sh" "$target" --force
+grep -q 'hard-linked or non-regular destination' "$fixture/command.log"
+grep -qx 'outside the kit' "$fixture/victim.txt"
+rm "$target/.agents/skills/deslop/SKILL.md"
+bash "$kit/scripts/bootstrap.sh" "$target" > "$fixture/command.log"
+echo "Force refuses to write through a hard link: PASS"
+
 mkdir "$target/.githooks"
 echo '# existing hook' > "$target/.githooks/pre-commit"
 expect_failure bash "$target/.agents/install-hooks.sh" "$target"
@@ -95,6 +105,53 @@ EOF
   grep -q 'diff checks did not run' "$fixture/command.log"
 )
 echo "Policy requires a valid diff and verification script: PASS"
+
+# Shipped policy.yml config; each case commits one change on case_base and
+# must fail with every listed message.
+policy_yml="$kit/templates/github/workflows/policy.yml"
+policy_env=(
+  PR_BODY_FILE="$fixture/body.md"
+  SENSITIVE_PATTERNS="$(sed -n "s/^ *SENSITIVE_PATTERNS: '\(.*\)'$/\1/p" "$policy_yml")"
+  SCAN_EXTENSIONS="$(sed -n "s/^ *SCAN_EXTENSIONS: '\(.*\)'$/\1/p" "$policy_yml")"
+)
+commit_all() {
+  git -C "$target" add -A
+  git -C "$target" -c user.name=Smoke -c user.email=smoke@example.invalid commit -q --no-verify -m "$1"
+  git -C "$target" rev-parse HEAD
+}
+policy_fails_with() {
+  local case_head message
+  case_head="$(commit_all case)"
+  (
+    cd "$target"
+    expect_failure env "${policy_env[@]}" BASE_SHA="$case_base" HEAD_SHA="$case_head" \
+      bash .github/scripts/policy-check.sh
+  )
+  for message in "$@"; do grep -qF "$message" "$fixture/command.log"; done
+  git -C "$target" checkout -q --detach "$case_base"
+}
+git -C "$target" checkout -q --detach "$base"
+git -C "$target" checkout -q "$base" -- .agents/verify.sh
+mkdir "$target/auth" "$target/src"
+printf 'export const step%s = %s;\n' 1 1 2 2 3 3 4 4 5 5 6 6 > "$target/auth/session.ts"
+echo 'export default {};' > "$target/vite.config.ts"
+echo 'export const b = 1;' > "$target/src/b.ts"
+case_base="$(commit_all policy-cases)"
+
+echo '// eslint-disable-next-line' >> "$target/src/b.ts"
+policy_fails_with 'src/b.ts: eslint-disable without a reason'
+mkdir "$target/lib"
+git -C "$target" mv auth/session.ts lib/session.ts
+policy_fails_with 'sensitive paths changed without'
+echo '// @ts-ignore' > "$target/auth/"$'\303\251'".ts"
+policy_fails_with 'sensitive paths changed without' $'auth/\303\251.ts: @ts-ignore'
+echo '// @ts-ignore' > "$target/src/"$'x\n::warning::injected'".ts"
+policy_fails_with '@ts-ignore'
+if grep -q '^::warning::injected' "$fixture/command.log"; then
+  echo "Expected filenames to stay on one ::error:: line" >&2
+  exit 1
+fi
+echo "Policy scans nested, renamed, and non-ASCII paths: PASS"
 
 dry_target="$fixture/dry"
 mkdir "$dry_target"
