@@ -7,6 +7,12 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Added
 
+- Vendored `security-audit` from
+  [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)
+  (MIT, commit `c1c8a8c`) with its phase docs, domain companions,
+  report schema, and zero-dependency Node validators. It owns auditing
+  existing code; `security-and-hardening` still owns writing secure code.
+  Listed in the template routing table, skill catalogs, README, and CREDITS.
 - `bruh` skill: turns dense LLM output, specs, logs, and unfamiliar-domain
   jargon into short, ADHD-friendly explanations for engineers. It keeps the
   real terms and explains the mechanism so the reader learns, with each rule

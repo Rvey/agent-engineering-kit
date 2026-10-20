@@ -22,6 +22,7 @@ actually find them.
 | `python-performance-optimization` | Profiling-first Python optimization | `references/details.md`, `references/advanced-patterns.md` |
 | `performance-optimization` | Measure → identify → fix → verify → guard, any layer | `references/performance-checklist.md` |
 | `security-and-hardening` | Threat-model-first hardening: OWASP Top 10 + LLM Top 10, secrets, supply chain, privacy | `references/hardening-patterns.md`, `references/security-checklist.md` |
+| `security-audit` | Source-first vulnerability review: guidance mode, or a full six-phase audit (recon, hunting, adversarial validation, validated `findings.json`, report) | Phase docs + domain companions at skill root; `report-schema.json`, `validate-*.cjs` |
 | `test-audit` | Test authoring gate + pruning audits | `CAMPAIGN.md` (subsystem-wide prunes) |
 | `bruh` | Explaining dense text or jargon for engineers with ADHD: point first, mental model, real terms kept | `references/research.md` |
 | `eslint-prettier-config` | ESLint flat config + Prettier integration | — |

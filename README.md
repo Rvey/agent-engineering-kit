@@ -23,7 +23,7 @@ This kit packages all four into files you drop into any new project.
 |---|---|
 | `templates/AGENTS.template.md` | The starting shape for another repo's `AGENTS.md`: routing table, gates, hard rules, review protocol. **Generate the real file from your repo — don't keep the placeholders.** |
 | `AGENTS.md` | This kit repo's own instructions, generated from its real layout and gates. Not the template — see the row above. |
-| `.agents/skills/` | 15 vendored skills (`SKILL.md` + references) covering full setup, AGENTS.md generation, prompt refinement, context setup, UI engineering, ADRs/docs, React/Next perf, FastAPI, Python perf, performance work, security, tests, lint config, diff cleanup, and ADHD-friendly explanations |
+| `.agents/skills/` | 16 vendored skills (`SKILL.md` + references) covering full setup, AGENTS.md generation, prompt refinement, context setup, UI engineering, ADRs/docs, React/Next perf, FastAPI, Python perf, performance work, security hardening and audits, tests, lint config, diff cleanup, and ADHD-friendly explanations |
 | `.cursor/rules/` | Glob-scoped rule templates for Cursor-compatible agents (web app + Python runtime) |
 | `templates/github/` | Loop-enforcement files copied by bootstrap: PR template, CI gate and policy workflows, check script, CODEOWNERS example |
 | `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement, troubleshooting |
@@ -209,6 +209,7 @@ Full walkthrough: [docs/01-agent-workflow.md](docs/01-agent-workflow.md).
 | `python-performance-optimization` | Profiling or optimizing Python hot paths |
 | `performance-optimization` | Any performance work, any layer — measure first |
 | `security-and-hardening` | Input handling, auth, data storage, external APIs, uploads, LLM features, dependency audits |
+| `security-audit` | Security audit, pen test, or vulnerability review of an existing codebase |
 | `test-audit` | Writing, changing, reviewing, or pruning tests |
 | `eslint-prettier-config` | Setting up or changing lint/format configuration |
 | `deslop` | After a feature lands, before review — strip AI slop from the diff |
