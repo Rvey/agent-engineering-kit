@@ -26,7 +26,7 @@ Use `confirmed` only when source evidence and bounded validation establish the f
 >
 > **Desktop, mobile, and local-IPC targets** (native apps, deep links, webview bridges, exported components, privileged helpers, local daemons, Unix sockets/XPC/Binder/D-Bus): use [DESKTOP-MOBILE-AND-LOCAL-IPC.md](DESKTOP-MOBILE-AND-LOCAL-IPC.md).
 
-**Injection** (subagent_type: `general`)
+**Injection**
 Trace untrusted input from entry point to dangerous sink. What counts as a "dangerous sink" depends on the application:
 - Web apps: SQL queries, HTML output, shell commands, template engines, file paths, HTTP redirects, deserialization
 - Libraries: any function that processes caller-supplied data without validation — buffer operations, parsers, format strings
@@ -36,7 +36,7 @@ Trace untrusted input from entry point to dangerous sink. What counts as a "dang
 
 Do not stop at the obvious direct paths. Look for indirect injection: data stored safely, then retrieved and used in a dangerous context by different code. Look for injection through field names, keys, headers, and metadata — not just values. Look for injection into secondary systems (logs, caches, search indexes, analytics).
 
-**Access control** (subagent_type: `general`)
+**Access control**
 Verify that a caller cannot do something outside its authority. Go beyond checking whether permission checks exist — verify they check the *right* permission for the *right* resource via the *right* mechanism:
 - Is there a path to the same state change that checks a different (weaker) permission?
 - Can a field in the request body override what the permission system intended to restrict?
@@ -46,14 +46,14 @@ Verify that a caller cannot do something outside its authority. Go beyond checki
 
 For complex access models, split into separate agents for auth bypass vs authorization logic.
 
-**Resource and file handling** (subagent_type: `general`)
+**Resource and file handling**
 - Path traversal (reading/writing outside intended directories) — including through symlinks, encoded sequences, and null bytes
 - SSRF (making the application fetch attacker-controlled URLs) — including through redirects, DNS rebinding, and URL parser differentials
 - Unsafe deserialization, archive extraction (zip slip), temp file handling
 - Memory safety (if applicable): buffer overflows, use-after-free, integer overflow
 - Race conditions on file operations (TOCTOU between check and use)
 
-**Cryptography and secrets** (subagent_type: `general`)
+**Cryptography and secrets**
 - Weak randomness for security-critical values (tokens, keys, nonces)
 - Hardcoded secrets, secrets in logs, error messages, URLs, or client-visible responses
 - Broken key derivation, missing HMAC verification, nonce reuse
@@ -61,7 +61,7 @@ For complex access models, split into separate agents for auth bypass vs authori
 - Misuse of crypto primitives (ECB mode, unauthenticated encryption, static IVs, etc.)
 - What happens when crypto operations fail? Does the error path fall back to no-crypto?
 
-**Business logic** (subagent_type: `general`)
+**Business logic**
 Hunt logic errors by hand: standard scanners cannot find them, and they yield high-impact findings. For each major workflow:
 - **State machine violations**: Can you skip steps? Go backwards? Reach an invalid state? What happens if you replay a completed flow? What about partial failure — if step 2 of 3 fails, is step 1 rolled back?
 - **Race conditions with business impact**: Concurrent operations that produce invalid states (double-spend, double-approve, lost updates). Focus on operations that check-then-act non-atomically.
@@ -71,7 +71,7 @@ Hunt logic errors by hand: standard scanners cannot find them, and they yield hi
 - **Time-based logic**: Expiry checks, scheduling, rate windows, clock skew. What happens at exact boundary moments? What about timezone differences between components?
 - **Default and fallback behavior**: What is the security posture when config is missing? When a feature flag is off? When a dependency is unavailable? When the system is mid-migration?
 
-**Feature abuse and data leakage** (subagent_type: `general`)
+**Feature abuse and data leakage**
 Legitimate features used for unintended purposes. Look for bugs in the design, not only in the code:
 - **Export/backup as exfiltration**: Can a low-privilege user trigger an export, snapshot, or backup that includes data above their access level? Can they export other users' data? Does the export include deleted/draft/private content? Revision history that was supposed to be pruned?
 - **Import/restore as injection**: Can import overwrite existing data? Can it create records that bypass normal validation? Can it inject content into collections the user has no write access to? Does it respect the same permission model as the UI?
@@ -80,7 +80,7 @@ Legitimate features used for unintended purposes. Look for bugs in the design, n
 - **Preview/draft/staging leakage**: Are preview tokens scoped to one item or do they unlock broader access? Can draft content be discovered through search, RSS feeds, sitemaps, or API listing endpoints? Can cache headers cause a CDN to serve private content publicly?
 - **Notification/webhook as SSRF**: Can a user set a notification URL, webhook URL, or callback URL that the server fetches? Is it validated against internal networks? What about after a redirect?
 
-**Chained vulnerabilities and trust boundaries** (subagent_type: `general`)
+**Chained vulnerabilities and trust boundaries**
 Individually allowed or contained behavior can become a vulnerability when another component or lifecycle step relies on a stronger guarantee:
 - **Multi-step boundary failures**: Map what a low-privilege principal may read, write, invoke, and retain, then connect only concrete outputs to later trust decisions. Confirm each prerequisite and do not assume a downstream effect.
 - **Cross-component trust gaps**: Component A validates input and passes it to component B. Compare the exact guarantee A produces with what B assumes, including truncation, type coercion, normalization, tenant scope, and plugin/extension access.
@@ -89,7 +89,7 @@ Individually allowed or contained behavior can become a vulnerability when anoth
 - **Timing and ordering**: Review setup, migration, soft-delete, revoke/cache expiry, check/use, and validate/consume windows. Confirm stale state is accepted before reporting.
 - **Rollback and recovery**: Undelete, restore, revision rollback, and cancellation must apply current ownership, validation, and authorization. Confirm which invalid state is restored.
 
-**Wildcard** (subagent_type: `general`)
+**Wildcard**
 You are not given a category. Find vulnerabilities outside the standard classes already assigned.
 
 Read code that looks boring or disconnected from security. Follow incomplete, experimental, compatibility, and fallback features, but retain the same concrete boundary and validation requirements as every other class.
@@ -108,7 +108,7 @@ Use these starting points, but do not limit yourself to them:
 
 Pursue anomalies inside your assigned scope until the invariant is settled. If something looks strange, read it until you can state whether it is safe. If a function has a comment explaining why it is safe, verify the explanation. If a variable is named `temp` or `hack` or `legacy`, read it closely.
 
-**Obvious things** (subagent_type: `general`)
+**Obvious things**
 Other agents hunt subtle bugs. This agent checks the basic exposures that are easy to overlook because everyone assumes someone else already checked them:
 - Are there any hardcoded passwords, API keys, tokens, or secrets in the source? (grep for `password`, `secret`, `apikey`, `token`, `Bearer`, `-----BEGIN`, common default passwords)
 - Are there any TODO/FIXME/HACK/XXX comments that reference security? (`TODO: add auth`, `FIXME: validate input`, `HACK: skip permission check`)

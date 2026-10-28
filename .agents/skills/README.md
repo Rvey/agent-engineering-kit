@@ -24,8 +24,7 @@ directly when an installed skill is not available.
 | `performance-optimization` | Any performance work, any layer — measure → identify → fix → verify → guard | `references/performance-checklist.md` |
 | `python-performance-optimization` | Profiling and optimizing Python hot paths | `references/details.md`, `references/advanced-patterns.md` |
 | `react-next-performance` | React/Next client components, hooks, effects, stream UIs, canvas code | — |
-| `security-and-hardening` | Input handling, auth/authz, sensitive data, external integrations, LLM features | `references/hardening-patterns.md`, `references/security-checklist.md` |
-| `security-audit` | Security audit, pen test, or vulnerability review of an existing codebase (guidance mode by default; full six-phase audit on explicit request) | Phase docs + domain companions at skill root; `validate-*.cjs` (Node) |
+| `security-audit` | Security sign-off on changes touching input, auth, data, external services, or LLMs; vulnerability review, audit, or pen test (guidance mode by default; full six-phase audit on explicit request) | `FULL-AUDIT.md`, phase docs + domain companions at skill root; `validate-*.cjs` (Node) |
 | `test-audit` | Writing, changing, or reviewing tests; deciding whether a change needs one; pruning low-value tests | `AUDIT.md` (pruning sweeps), `CAMPAIGN.md` (whole-subsystem prunes) |
 | `bruh` | Dense LLM output, specs, logs, or unfamiliar-domain jargon needs a short, ADHD-friendly explanation for engineers | `references/research.md` |
 
@@ -46,8 +45,7 @@ Full attribution and licenses: [`../../CREDITS.md`](../../CREDITS.md).
 | `eslint-prettier-config` | patricio0312rev/skills (MIT) | Vendored |
 | `fastapi-python` | Mindrally/skills (Apache-2.0) | Packaged as a skill with usage frontmatter |
 | `performance-optimization` | addyosmani/agent-skills (MIT) | Vendored with checklist |
-| `security-and-hardening` | addyosmani/agent-skills (MIT) | Vendored with shared checklist + patterns |
-| `security-audit` | cloudflare/security-audit-skill (MIT) | Vendored whole skill dir (validators + tests); attribution note + "Use when" description wording |
+| `security-audit` | cloudflare/security-audit-skill (MIT) | Vendored whole skill dir (validators + tests); `SKILL.md` trimmed with full-audit setup moved to `FULL-AUDIT.md`, sign-off step added, `subagent_type` tags dropped; phase rules, schema, validators unchanged |
 | `python-performance-optimization` | wshobson/agents (MIT) | Vendored with references |
 | `react-next-performance` | Authored in-house | Written from production incidents |
 | `bruh` | Authored in-house | Rules grounded in ADHD, cognitive-load, and learning research; evidence in `references/research.md` |

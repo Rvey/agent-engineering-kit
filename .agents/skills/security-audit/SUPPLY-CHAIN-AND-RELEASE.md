@@ -16,7 +16,7 @@ Split large targets into dependency resolution, CI isolation, artifact provenanc
 - Use `confirmed` for in-repo control-flow failures with bounded local validation. Use `needs_validation` for branch protection, hosted-runner, registry, signing-service, or production promotion facts that are not observable.
 ```
 
-## Dependency and build-input attack classes (subagent_type: `general`)
+## Dependency and build-input attack classes
 
 **Dependency source and namespace confusion**
 Resolver configuration can select an unintended public/private namespace, fallback registry, mirror, repository, or source URL. Review package names, source priority, lockfile and checksum use, alternate build files, platform-specific resolution, and first-install versus update behavior.
@@ -30,7 +30,7 @@ Schemas, vendored archives, generated clients, localization, documentation examp
 **Build-context inclusion**
 Secrets, local configuration, repository metadata, test fixtures, or developer artifacts enter a package or image because the build context and ignore rules exceed intended release inputs. Confirm that the resulting artifact exposes a real credential, private data, or privileged configuration.
 
-## CI and automation attack classes (subagent_type: `general`)
+## CI and automation attack classes
 
 **Untrusted code in a privileged workflow**
 A pull request, issue comment, fork, dependency update, or external event runs contributor-controlled code with protected secrets, write tokens, deployment authority, or a trusted runner. Compare trigger type, checkout ref, approval gate, environment protection, and permission narrowing. Do not assume repository-host defaults that are not in source.
@@ -44,7 +44,7 @@ A lower-trust job can populate a cache, artifact, shared workspace, or output th
 **Automation identity overreach**
 CI jobs receive permissions beyond the operation, repository, environment, or duration needed, and untrusted job inputs can select the affected resource. Missing least privilege alone is hardening; require a reachable privileged action.
 
-## Release and update attack classes (subagent_type: `general`)
+## Release and update attack classes
 
 **Build-to-promotion substitution**
 Tests, review, signature, and publication refer to mutable tags, filenames, channels, or artifact IDs rather than the same immutable digest. Check every copy, repack, architecture merge, and provenance step between build and release.

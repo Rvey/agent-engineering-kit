@@ -2,7 +2,7 @@
 
 ### Phase 1: Map the source and plan coverage
 
-The parent initializes `run-metadata.json`, applies the strict pre-reconnaissance budget gate in `SKILL.md`, then creates agent scratch roots and the shared ledger before hunting. If the gate fails, record the incomplete status in metadata and launch no reconnaissance agent. Reconnaissance reads the target and locally available build/configuration state only. It does not contact deployed endpoints, external identity providers, registries, brokers, cloud APIs, or other shared services.
+The parent initializes `run-metadata.json`, applies the strict pre-reconnaissance budget gate in `FULL-AUDIT.md`, then creates agent scratch roots and the shared ledger before hunting. If the gate fails, record the incomplete status in metadata and launch no reconnaissance agent. Reconnaissance reads the target and locally available build/configuration state only. It does not contact deployed endpoints, external identity providers, registries, brokers, cloud APIs, or other shared services.
 
 Launch several `research` agents in parallel. They return structured facts to the parent and do not write files.
 
@@ -54,7 +54,7 @@ Read tests, build definitions, manifests, packaging, and maintained environment 
 7. Whether trusted parent-side code can promote predeclared scratch files with path-confined no-follow descriptor traversal, nonblocking regular-file checks, no-follow traversal of every destination parent, exclusive regular-file destination creation, and explicit per-file and cumulative size bounds. Missing promotion controls block use of scratch files as evidence.
 ```
 
-Add focused reconnaissance agents for materially distinct deployment modes or subsystems that these four do not map. Do not silently omit them: if the budget gate in `SKILL.md` blocks a focused agent, launch nothing for it, seed the unmapped area as a `deferred` ledger unit with reason `budget_cannot_reserve_critics_and_validation`, and disclose the gap in the report.
+Add focused reconnaissance agents for materially distinct deployment modes or subsystems that these four do not map. Do not silently omit them: if the budget gate in `FULL-AUDIT.md` blocks a focused agent, launch nothing for it, seed the unmapped area as a `deferred` ledger unit with reason `budget_cannot_reserve_critics_and_validation`, and disclose the gap in the report.
 
 ## Prior-run input
 

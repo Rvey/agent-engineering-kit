@@ -16,7 +16,7 @@ Use `CLIENT-SIDE.md` for browser-side webview behavior, `MEMORY-SAFETY-AND-BINAR
 - Use `confirmed` for source evidence plus bounded local/emulator tests. Use `needs_validation` when signing, manifest merge, OS version, device policy, installer ACL, or packaging is required but not observable.
 ```
 
-## Deep-link, callback, and navigation attack classes (subagent_type: `general`)
+## Deep-link, callback, and navigation attack classes
 
 **Custom-scheme and deep-link ambiguity**
 Another app or page can invoke a route that mutates state, imports data, completes authentication, or selects an account without a current-session and one-time callback binding. Review URI normalization, duplicate query fields, scheme/host/path matching, exported activity/handler policy, and stale/replayed links.
@@ -27,7 +27,7 @@ OAuth, SSO, magic-link, invite, device pairing, passwordless, or payment callbac
 **File-open and intent authority confusion**
 An associated file, share intent, drag/drop item, pasteboard/clipboard record, notification action, or open-file event triggers a privileged operation without confirming content type, sender trust where applicable, current user intent, and final target.
 
-## Webview and native-bridge attack classes (subagent_type: `general`)
+## Webview and native-bridge attack classes
 
 **Navigation-origin to bridge confusion**
 Remote or attacker-controlled frames can reach a JavaScript/native bridge intended only for packaged content. Validate origin at call time and after every navigation, redirect, subframe creation, popup, and error/fallback page. URL-prefix checks and initial-load checks are insufficient.
@@ -38,7 +38,7 @@ Web content can select arbitrary files, commands, IPC methods, credentials, or s
 **Webview file and universal access**
 Remote content can read app-local files, privileged custom schemes, or internal origins because file access, universal access, mixed content, debug interfaces, or custom protocol handlers join origins unexpectedly. Missing a restrictive setting without reachable protected content is hardening.
 
-## Local IPC and exported-component attack classes (subagent_type: `general`)
+## Local IPC and exported-component attack classes
 
 **IPC peer-authentication gaps**
 Unix sockets, named pipes, XPC, Binder, D-Bus, native messaging, RPC, shared memory, or loopback listeners accept a lower-trust peer without checking OS credentials, code identity, sandbox token, or channel ownership. Require a meaningful method or disclosure behind the channel.
@@ -52,7 +52,7 @@ A mobile component or local automation endpoint is externally invokable and perf
 **IPC lifecycle and correlation confusion**
 Predictable request IDs, reused handles, stale channels, inherited descriptors, world-writable socket paths, or restart behavior lets one peer answer, cancel, or reuse another peer's operation. Review creation permissions and cleanup of socket files, locks, ports, and shared mappings.
 
-## Privileged-helper and local-file attack classes (subagent_type: `general`)
+## Privileged-helper and local-file attack classes
 
 **Privileged helper as confused deputy**
 A low-privilege caller can select a privileged command, file, service, user, or system setting without per-operation authorization. Review sudo/polkit/UAC/XPC helper rules and ensure the helper independently validates normalized arguments.
@@ -66,7 +66,7 @@ The app checks a file/path then follows replacement, symlink, mount, or case/nor
 **Credential-store and local-secret boundary mismatch**
 A keychain/keystore item, token file, backup, log, clipboard, notification preview, or local config is readable by another app/profile/user with less authority. Plaintext readable only by the same intended OS account is not automatically a vulnerability; state the lower-trust reader and credential power.
 
-## Application-state and device-lifecycle attack classes (subagent_type: `general`)
+## Application-state and device-lifecycle attack classes
 
 **Account switch, logout, and device restore leakage**
 Cached data, background tasks, widgets, notifications, local databases, webview storage, or biometric approvals survive logout/account change and appear under a later account. Review backup/restore and multi-profile behavior.

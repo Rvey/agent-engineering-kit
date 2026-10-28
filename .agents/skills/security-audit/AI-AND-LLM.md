@@ -17,7 +17,7 @@ Use this alongside `ATTACK-CLASSES.md`, not instead of it. Transport, access con
 - Classify every candidate as `confirmed` only after source evidence and bounded local validation establish the boundary and result. Use `needs_validation` when a required provider, deployment, model, renderer, or identity behavior is not observable locally.
 ```
 
-## Context, retrieval, and memory attack classes (subagent_type: `general`)
+## Context, retrieval, and memory attack classes
 
 **Indirect injection through retrieved or ingested content**
 An attacker can write a RAG document, indexed page, file, email, issue body, tool response, or metadata that enters a different principal's model context. Trace who can write each source, how retrieval scopes it, whose session consumes it, and what capability is enabled there. Check isolation, resource authorization, and binding to the consuming principal's intent separately. The defect is a missing deterministic control, not persuasive text by itself.
@@ -31,7 +31,7 @@ Attacker-controlled content or model summaries are written into memory that late
 **Prompt role and provenance confusion**
 Prompt assembly lets untrusted text impersonate a system message, prior turn, tool result, policy, or memory record. Look for string concatenation, untyped history, caller-controlled role fields, and serialization round trips that lose source labels. Confirm that the forged provenance changes a deterministic trust decision or reaches a meaningful capability.
 
-## Tool and action attack classes (subagent_type: `general`)
+## Tool and action attack classes
 
 **Tool-argument injection into a downstream sink**
 Model-produced arguments reach SQL, shell, file, URL-fetch, or privileged APIs without handler-side validation. Treat the tool schema as input parsing, then follow each field from decoded call to sink. Structured output narrows shape; it does not establish authorization, safe paths, safe URLs, or query semantics.
@@ -48,7 +48,7 @@ The schema accepts aliases, extra fields, duplicate keys, coercions, nested free
 **Unbounded delegated action loops**
 A bounded request can enqueue repeated spend, send, mutation, or external API work without a per-request budget, per-action authorization, cancellation, or idempotency control. Confirm impact on shared cost, quotas, other users, or durable state. Do not test by exhausting a service; use code-level accounting and a locally bounded loop.
 
-## MCP and sub-agent trust classes (subagent_type: `general`)
+## MCP and sub-agent trust classes
 
 **Sub-agent and MCP trust inheritance**
 A delegated task receives the full session, credentials, memory, or capabilities rather than the least authority required. Check the principal and tenant carried into each call, capability narrowing, credential audience, and whether delegated results are treated as untrusted on return.
@@ -59,7 +59,7 @@ Calls or results are routed by attacker-influenceable server names, tool names, 
 **MCP metadata and schema as policy**
 Tool descriptions, resource metadata, prompts, completion hints, or schemas supplied by an MCP peer are trusted as policy or authorization. These fields can guide the model but cannot grant capability. Find the deterministic allowlist, server identity check, and handler authorization that remain authoritative when metadata conflicts.
 
-## Output and disclosure attack classes (subagent_type: `general`)
+## Output and disclosure attack classes
 
 **Insecure output rendering**
 Model output reaches an executing HTML, Markdown, template, URL, or command sink without the sink's required encoding and policy. For browser rendering, verify auto-loaded resources and CSP or sanitization in `CLIENT-SIDE.md`; renderer behavior outside the repository makes the candidate `needs_validation`.

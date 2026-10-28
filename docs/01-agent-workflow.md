@@ -112,15 +112,15 @@ over `git diff` vs the merge base:
 Behavior-neutral edits only. Anything risky gets reported, not touched.
 Deslop never replaces the review gate.
 
-## Stage 6 — Security sign-off (`security-and-hardening` skill)
+## Stage 6 — Security sign-off (`security-audit` skill, guidance mode)
 
 Trigger it when the change touches: user input, auth/authz, stored or
 transmitted sensitive data, external integrations, uploads/webhooks/callbacks,
 PII/payments, or LLM calls.
 
-Walk `references/security-checklist.md` and run the skill's verification
-list. Treat LLM output as untrusted input. Grep the staged diff for secrets
-before committing.
+Follow the skill's "Security sign-off on a change" step over the diff and
+record the result in the PR's `## Security` section. A full six-phase audit
+runs only when someone asks for one.
 
 ## Stage 7 — Verification gates
 

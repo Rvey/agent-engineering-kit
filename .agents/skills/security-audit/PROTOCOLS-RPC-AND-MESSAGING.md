@@ -16,7 +16,7 @@ Split large systems by producer/consumer pair, external/internal peer role, sync
 - Use `confirmed` for source-complete paths plus bounded local producer/consumer tests. Use `needs_validation` for broker ACL, service-mesh identity, topic attachment, or compatibility behavior outside the repository.
 ```
 
-## Framing, schema, and interpretation attack classes (subagent_type: `general`)
+## Framing, schema, and interpretation attack classes
 
 **Message boundary and canonicalization disagreement**
 Components disagree on length, compression, duplicate fields, unknown fields, encoding, numeric width, normalization, or envelope/body precedence. Compare generated and custom parsers, gateways, language bindings, and version converters. Confirm which principal, resource, or operation differs after decoding.
@@ -27,7 +27,7 @@ Unknown variants, missing discriminators, zero values, default privileges, or co
 **Envelope and payload identity mismatch**
 Authorization uses trusted-looking routing or envelope metadata while the handler acts on a conflicting tenant, account, subject, object, or sender in the body. Identify which source is authoritative and ensure clients cannot override it.
 
-## RPC identity and authorization attack classes (subagent_type: `general`)
+## RPC identity and authorization attack classes
 
 **Interceptor and method-path inconsistency**
 An authn/authz interceptor applies to unary methods but not streams, reflection, health, gateway-transcoded paths, compatibility services, or individual stream messages. Compare every registration and route to the same operation.
@@ -41,7 +41,7 @@ A stream, subscription, batch, or bulk message is authorized once, then later it
 **Callback and reply-correlation confusion**
 Predictable, reused, or cross-tenant correlation IDs let a response, webhook, cancellation, or acknowledgment satisfy another caller's pending operation. Bind each outstanding request to authenticated peer, tenant, operation, and lifecycle.
 
-## Broker and queue isolation attack classes (subagent_type: `general`)
+## Broker and queue isolation attack classes
 
 **Topic, routing-key, and subscription scope gaps**
 A publisher or subscriber can select another tenant's topic, wildcard, consumer group, partition, reply queue, or dead-letter route. Check broker-enforced ACLs where visible and application-side namespace construction. Tenant text inside a payload is not isolation.
@@ -52,7 +52,7 @@ Messages routed to dead-letter queues, error topics, tracing, or operator views 
 **Untrusted producer treated as control plane**
 A message body can declare itself an admin event, provider callback, replication record, or migration instruction without an independently authenticated producer and event type. Verify signatures and source/account/audience binding before privileged handling.
 
-## Replay, ordering, and transaction attack classes (subagent_type: `general`)
+## Replay, ordering, and transaction attack classes
 
 **Duplicate delivery and idempotency gaps**
 Retries or redelivery repeat a side effect because deduplication is absent, occurs after mutation, or uses a key that collides across tenants or operations. Confirm the broker's delivery model and the side effect that is not naturally idempotent.

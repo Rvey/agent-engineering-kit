@@ -16,7 +16,7 @@ Skill lookup: the vendored copy at .agents/skills/<name>/SKILL.md is authoritati
 | Adopt kit into another repo end-to-end | .agents/skills/full-setup/SKILL.md |
 | Vague request | .agents/skills/boost-prompt/SKILL.md |
 | New skill scaffold or edit | scripts/new-skill.sh + docs/05-adding-a-skill.md |
-| Touch input/auth/data/external/LLM paths | .agents/skills/security-and-hardening/SKILL.md |
+| Touch input/auth/data/external/LLM paths | .agents/skills/security-audit/SKILL.md (guidance mode) |
 | Add/change tests | .agents/skills/test-audit/SKILL.md |
 | Feature done, before review | .agents/skills/deslop/SKILL.md |
 

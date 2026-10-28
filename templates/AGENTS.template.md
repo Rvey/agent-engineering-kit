@@ -75,8 +75,7 @@ review) with no skill loaded.
 | Writing, changing, reviewing, or pruning tests; fixing a bug; adding behavior | `.agents/skills/test-audit/SKILL.md` |
 | Lint/format configuration | `.agents/skills/eslint-prettier-config/SKILL.md` |
 | Any feature delivered, before review | `.agents/skills/deslop/SKILL.md` |
-| Anything touching input, auth, data, external services, or LLMs | `.agents/skills/security-and-hardening/SKILL.md` |
-| Security audit, pen test, or vulnerability review of existing code | `.agents/skills/security-audit/SKILL.md` |
+| Anything touching input, auth, data, external services, or LLMs; security audit, pen test, or vulnerability review | `.agents/skills/security-audit/SKILL.md` |
 | Dense output, spec, log, or jargon the user asks to have explained simply | `.agents/skills/bruh/SKILL.md` |
 
 Add a row here the moment a second incident class appears. The routing table
@@ -154,8 +153,8 @@ A change is not done until all of these are true:
    edits only; report anything risky instead of touching it.
 4. **Security sign-off**: if the change accepts input, touches auth/authz,
    stores or transmits sensitive data, integrates an external service, adds
-   uploads/webhooks, handles PII/payments, or calls an LLM — walk
-   `.agents/skills/security-and-hardening/references/security-checklist.md`.
+   uploads/webhooks, handles PII/payments, or calls an LLM — run the sign-off
+   in `.agents/skills/security-audit/SKILL.md` (guidance mode) over the diff.
 5. **Tests**: decide whether the change needs a test at all
    (`.agents/skills/test-audit/SKILL.md`, step 1); "no new test" is a valid
    answer. Every new test was seen failing first, and the handoff says which

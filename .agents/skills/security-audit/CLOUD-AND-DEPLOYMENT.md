@@ -16,7 +16,7 @@ Use `SUPPLY-CHAIN-AND-RELEASE.md` for build and promotion trust, `WEB-PROTOCOL-A
 - Use `confirmed` for active in-repo configurations and local rendering/policy validation. Use `needs_validation` for account policy, network attachment, runtime admission, hosted metadata, or drift that needs owner observation.
 ```
 
-## Workload identity and IAM attack classes (subagent_type: `general`)
+## Workload identity and IAM attack classes
 
 **Workload identity overreach**
 A workload, pod, function, edge worker, or node identity can act on tenants, accounts, resources, or APIs beyond its role, and untrusted request or job input selects that target. Review cloud policy conditions, resource patterns, service-account attachment, namespace mapping, and fallback credentials.
@@ -27,7 +27,7 @@ Role assumption, external IDs, token exchange, workload federation, or resource 
 **Application authorization delegated to cloud metadata**
 An app trusts caller-supplied identity headers, tags, labels, account IDs, or resource metadata without verifying they came from the cloud control plane or a trusted proxy. Cloud IAM and application authorization are separate checks.
 
-## Ingress, network, and control-plane attack classes (subagent_type: `general`)
+## Ingress, network, and control-plane attack classes
 
 **Unexpected service or management-plane reachability**
 An ingress, service, listener, security group, load-balancer annotation, port mapping, or server bind exposes an admin, debug, metrics, node, control-plane, or internal API to a lower-trust network. Missing network controls alone are `needs_validation`; a repository-controlled public route to a sensitive handler can be `confirmed`.
@@ -38,7 +38,7 @@ A backend accepts forwarded identity, mTLS subject, or authorization metadata fr
 **Metadata and internal-service reachability**
 An untrusted URL, destination, or protocol selection reaches instance/container metadata, control-plane sockets, or internal APIs with workload credentials. Trace URL parsing and redirect handling under `ATTACK-CLASSES.md`; here establish deployed network, metadata-version, and identity boundaries.
 
-## Container and orchestration attack classes (subagent_type: `general`)
+## Container and orchestration attack classes
 
 **Host or control-plane capability exposure**
 A lower-trust workload can select privileged mode, capabilities, host namespaces, host paths, device mounts, container runtime sockets, or service-account tokens that cross into node/control-plane authority. Bare absence of seccomp or read-only filesystem is hardening unless a reachable operation crosses that boundary.
@@ -49,7 +49,7 @@ One deployment route enforces image identity, namespace, resource, secret, or pr
 **Namespace and label trust confusion**
 Network, admission, secret, or workload-identity policy relies on labels, annotations, names, or namespaces that a less-trusted principal can set. Compare who controls selectors with what authority matching grants.
 
-## Configuration and secret lifecycle attack classes (subagent_type: `general`)
+## Configuration and secret lifecycle attack classes
 
 **Security-control precedence drift**
 Development values, chart defaults, environment variables, command-line flags, feature gates, sidecar injection, or per-region overlays disable authentication, transport security, tenant scoping, or audit policy in a deployed environment. Render the final configuration for each maintained deployment, not just the base file.
@@ -60,7 +60,7 @@ Secrets enter logs, crash reports, process arguments, shared environment, broad 
 **Credential renewal and outage fallback**
 Failure to mount, refresh, rotate, or revoke a workload credential causes stale credentials to remain active or an app to accept a less trusted identity mode. Review startup, readiness, reconnect, and cached-client behavior.
 
-## Managed storage, events, and edge attack classes (subagent_type: `general`)
+## Managed storage, events, and edge attack classes
 
 **Object and signed-URL policy confusion**
 Bucket/container policy, object keys, CDN origins, or signed URLs fail to bind principal, operation, object namespace, audience, or expiry. Review list/version operations and write paths as well as reads.

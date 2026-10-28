@@ -16,7 +16,7 @@ Use `MEMORY-SAFETY-AND-BINARY.md` for memory-integrity defects and `PROTOCOLS-RP
 - Use `confirmed` for source-visible bounds failures demonstrated safely. Use `needs_validation` when upstream caps, deployed topology, autoscaling, paid quota, or recovery behavior is outside the repository.
 ```
 
-## Computational amplification attack classes (subagent_type: `general`)
+## Computational amplification attack classes
 
 **Superlinear parsing, matching, or evaluation**
 Small accepted input drives catastrophic regex backtracking, nested parsing, recursive validation, symbolic evaluation, graph traversal, template expansion, or adversarial sort/hash behavior. Derive accepted depth/cardinality and complexity, then demonstrate a bounded growth curve locally.
@@ -27,7 +27,7 @@ Compressed, sparse, nested, aliased, or encoded input expands far beyond the che
 **Database and downstream query amplification**
 A small request creates broad scans, pathological joins, fan-out, unbounded sort/aggregation, or many downstream calls because query depth, filter cardinality, pagination, or expansion fields are not bounded. Confirm authorization does not intentionally permit the same resource scope.
 
-## Resource accumulation attack classes (subagent_type: `general`)
+## Resource accumulation attack classes
 
 **Unbounded buffering and cardinality**
 Bodies, out-of-order streams, uploads, sessions, unique cache keys, metrics labels, log fields, subscriptions, or pending jobs accumulate without per-item and aggregate limits. Find cleanup and expiration on disconnect, timeout, cancellation, and partial parse.
@@ -38,7 +38,7 @@ Malformed or canceled work misses cleanup and retains sockets, files, database c
 **Detached work after cancellation**
 Client timeout, disconnect, canceled job, or failed authorization returns control but leaves database, model, network, or worker work running. Trace cancellation and deadline propagation through every layer.
 
-## Quota and scheduling attack classes (subagent_type: `general`)
+## Quota and scheduling attack classes
 
 **Pre-authentication work imbalance**
 Expensive parsing, key lookup, cryptography, decompression, or external requests happen before authentication and the earliest size/rate gate. Compare minimal requester effort to shared service cost and check upstream limits.
@@ -49,7 +49,7 @@ Accounting uses attacker-influenceable IP, route, tenant, key prefix, task ID, o
 **Worker, pool, and priority starvation**
 Low-priority or attacker-controlled jobs hold shared locks, workers, database pools, event-loop turns, or scheduler priority needed by unrelated users. Require a path that bypasses queue/concurrency fairness or retains a slot beyond its deadline.
 
-## Failure and recovery attack classes (subagent_type: `general`)
+## Failure and recovery attack classes
 
 **Reachable fatal error or deadlock**
 An untrusted input reaches `panic`, abort, fatal assertion, unhandled exception, process exit, lock cycle, or infinite loop in a shared process. Confirm supervisor scope and whether one worker or the whole service becomes unavailable. A restarted isolated worker may reduce impact but does not erase the defect.

@@ -16,7 +16,7 @@ Pick relevant classes from Phase 1 and split large targets by parser, allocator/
 - Classify as `confirmed` only after source evidence and bounded local validation establish the defect and effect. Use `needs_validation` when ABI, allocator, architecture, feature, deployment, or reachability facts remain unknown.
 ```
 
-## Bounds, integer, and representation attack classes (subagent_type: `general`)
+## Bounds, integer, and representation attack classes
 
 **Out-of-bounds read or write**
 A length, offset, index, or terminator reaches a fixed or allocated buffer without a correct bound. Recalculate available headroom after prefixes, alignment, padding, and terminators. Check both source and destination capacity, and whether a short input is read before its declared length is trusted.
@@ -30,7 +30,7 @@ Code mixes bytes, elements, code units, pages, words, wire units, or nested poin
 **Uninitialized or partially initialized data**
 A buffer, padding, struct field, or vector capacity is returned, compared, hashed, serialized, or passed across a trust boundary before initialization. Require an observable consumer and realistic output length; stack allocation by itself is not disclosure.
 
-## Lifetime, type, and concurrency attack classes (subagent_type: `general`)
+## Lifetime, type, and concurrency attack classes
 
 **Use-after-free, stale view, and double free**
 Owners are released while callbacks, wait queues, timers, iterators, borrowed slices, or cached raw pointers can still use them. Review every error, cancellation, close, and realloc path. For embedded notification anchors, each free path must drain or detach all observers.
@@ -47,7 +47,7 @@ Concurrent parser streams, global caches, lazy initialization, signal handlers, 
 **Lock-order, deadlock, and starvation**
 Externally reachable operations acquire locks in inconsistent order or hold them across callbacks and blocking I/O. Report under availability only when bounded input can stop shared progress; otherwise record it for fixing as a concurrency defect.
 
-## FFI and ABI attack classes (subagent_type: `general`)
+## FFI and ABI attack classes
 
 **Pointer-length and ownership contract mismatch**
 Caller and callee disagree on who allocates, frees, pins, or mutates a buffer, how long a pointer remains valid, or whether a length is bytes or elements. Trace both sides of every `extern`, CGo/JNI/Python/native binding, and generated wrapper. Check null, zero length, aliasing, and callback retention.
@@ -58,7 +58,7 @@ Foreign code receives a struct, bitfield, packed record, callback signature, int
 **Unwind, exception, and thread-affinity violations**
 Exceptions or panics cross an ABI that forbids unwinding, callbacks run after teardown, or APIs requiring one runtime thread are invoked elsewhere. Review error conversion and cancellation. Confirm whether the process aborts or state is corrupted before assigning impact.
 
-## Binary loading and runtime attack classes (subagent_type: `general`)
+## Binary loading and runtime attack classes
 
 **Library, plugin, and executable search-order trust**
 A privileged process loads a library, plugin, runtime image, or helper from a path writable by a less-trusted principal, or resolves a bare name through an attacker-influenceable working directory or environment. Compare intended installation ownership with each fallback and compatibility search path. A user loading their own plugin into their own process is not a boundary violation.
@@ -75,7 +75,7 @@ Validator, interpreter, optimizer, and generated code disagree about types, boun
 **Unload, reload, and teardown safety**
 Live function pointers, callbacks, worker threads, or data views survive module unload or runtime reset. Review shutdown and failed-load cleanup as closely as startup.
 
-## Kernel and privileged-interface attack classes (subagent_type: `general`)
+## Kernel and privileged-interface attack classes
 
 **User-copy bounds and repeated reads**
 A syscall, ioctl, driver, or kernel parser derives a trusted fact from user memory then reads the same mutable address again. Copy the full request once or revalidate the later copy. Also audit size, direction, and access checks at each user-copy primitive.

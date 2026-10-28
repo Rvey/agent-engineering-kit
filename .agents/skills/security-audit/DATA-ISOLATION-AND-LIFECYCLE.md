@@ -16,7 +16,7 @@ Split large targets by primary storage, cache/search, object/blob storage, analy
 - Use `confirmed` for complete source-visible lineage and bounded dummy-tenant tests. Use `needs_validation` when external storage policy, retention, CDN behavior, replica lag, or backup access is unavailable.
 ```
 
-## Tenant and object-isolation attack classes (subagent_type: `general`)
+## Tenant and object-isolation attack classes
 
 **Missing tenant or owner enforcement**
 A read, update, delete, list, count, or bulk query identifies an object without binding it to the authenticated tenant/owner, or trusts body fields to supply that identity. Compare direct lookup, nested relationship, background, admin, import, and legacy paths.
@@ -30,7 +30,7 @@ Row-level policy, ORM default scopes, authorization filters, and raw/bypass clie
 **Blob and signed-reference overreach**
 Object keys, attachment IDs, version IDs, shared links, or signed URLs permit operations or namespaces beyond the issuing principal's access, or remain valid after the underlying ACL changes. Bind operation, exact object/version, audience, expiry, and tenant.
 
-## Derived-data and disclosure attack classes (subagent_type: `general`)
+## Derived-data and disclosure attack classes
 
 **Search, cache, and index ACL drift**
 A primary record's ACL or lifecycle changes without invalidating a searchable, cached, embedded, thumbnail, RSS, preview, or index copy. Validate filtering at retrieval time as well as document ingestion and invalidation.
@@ -41,7 +41,7 @@ Private content or credentials are emitted into systems with broader access, lon
 **Enumeration and aggregate oracles**
 Counts, filters, ordering, errors, unique constraints, timings, notification behavior, or existence checks disclose protected object or account state. Require a concrete confidential predicate and observable distinction, not general response variance.
 
-## Export, backup, restore, and migration attack classes (subagent_type: `general`)
+## Export, backup, restore, and migration attack classes
 
 **Export and backup scope expansion**
 An export, snapshot, portability package, report, or backup includes other tenants, inaccessible object fields, soft-deleted data, secret values, or history above the requester's access. Check per-item authorization after selection and authorization to download the final artifact.
@@ -55,7 +55,7 @@ Old records lack tenant/ACL/lifecycle fields, incompatible IDs collide, or parti
 **Backup and replication boundary drift**
 Encryption keys, storage accounts, cross-region replicas, restoration environments, or support snapshots have broader identity or tenant scope than primary data. Source can confirm only in-repo policy; hosted access and retention require `needs_validation`.
 
-## Deletion, revocation, and lifecycle attack classes (subagent_type: `general`)
+## Deletion, revocation, and lifecycle attack classes
 
 **Soft-delete and tombstone bypass**
 Direct lookup, search, relation traversal, object link, background processor, or restore ignores the lifecycle predicate and returns or acts on a deleted/revoked record. Check whether soft-deleted identifiers can be re-registered before all references are gone.

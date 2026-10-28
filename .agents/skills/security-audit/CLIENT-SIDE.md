@@ -16,7 +16,7 @@ Use alongside `ATTACK-CLASSES.md`. This file covers browser sources and sinks, o
 - Use `confirmed` only for complete source evidence plus bounded local browser tests. Use `needs_validation` when renderer, extension permission, deployed header, or browser-policy behavior is required but unavailable.
 ```
 
-## DOM and object-state attack classes (subagent_type: `general`)
+## DOM and object-state attack classes
 
 **DOM-based XSS**
 Trace `location` fields, `document.referrer`, `window.name`, message data, storage, and browser-controlled document state into `innerHTML`, `outerHTML`, `document.write`, string-evaluating APIs, executable URLs, jQuery HTML APIs, or framework escape hatches. Interpolation escaped by the framework is not a finding.
@@ -27,7 +27,7 @@ Attacker-injected `id` or `name` attributes shadow a global, form property, conf
 **Prototype pollution and gadget chain**
 An attacker-controlled key reaches a recursive write such as deep merge or path assignment and modifies prototype state. Then a reachable gadget consumes the polluted property to change authorization, execution, navigation, or rendering. `JSON.parse`, a shallow copy, or pollution without a gadget is not enough.
 
-## Cross-origin messaging and network attack classes (subagent_type: `general`)
+## Cross-origin messaging and network attack classes
 
 **`postMessage` origin and source trust**
 A handler performs a sensitive action with `event.data` without an exact origin allowlist and, where multiple frames share an origin, the expected `event.source`. On the send side, sensitive data sent to `*` reaches an unintended embedder. Weak substring, prefix, suffix, or unanchored-regex origin matching is not an origin check.
@@ -38,7 +38,7 @@ A WebSocket upgrade accepts ambient cookies from an untrusted origin without an 
 **Credentialed CORS trust**
 The server reflects or weakly matches `Origin` while allowing credentials and returns sensitive responses. A bare wildcard with credentials is rejected by browsers; report only the actual reflected/allowed origin path and cross-origin data or mutation.
 
-## Service-worker and browser-storage attack classes (subagent_type: `general`)
+## Service-worker and browser-storage attack classes
 
 **Service-worker registration and scope takeover**
 Attacker-influenceable content can become the registered worker script, control a path that receives an over-broad `Service-Worker-Allowed` scope, or alter update imports without integrity control. Verify the final script URL, response MIME type, origin, scope, and who controls every imported script. A normal same-origin worker with intended scope is not a defect.
@@ -52,7 +52,7 @@ Tokens, private responses, draft data, or authorization decisions remain in `loc
 **Cross-context storage and broadcast confusion**
 `storage` events, `BroadcastChannel`, shared workers, or origin-wide caches carry identity or commands between tabs without binding them to the current session. Check account switching, private/public windows, tenant changes, and stale tabs that can overwrite newer auth state.
 
-## Cross-site information leak classes (subagent_type: `general`)
+## Cross-site information leak classes
 
 **XS-Leaks and cross-origin state oracles**
 An attacker page can distinguish protected cross-origin state through resource load/error events, frame or window state, redirect behavior, timing, cache state, or response size while the browser attaches victim credentials. Require one concrete secret-bearing predicate such as whether a private object, role, or account exists. Generic timing variance or public-resource availability is not a finding.
@@ -60,7 +60,7 @@ An attacker page can distinguish protected cross-origin state through resource l
 **Window and opener state disclosure**
 A cross-origin window's permitted metadata or navigation result reveals protected state, or a retained opener/named-window relationship lets an attacker-controlled page influence a privileged navigation. Check COOP, frame protections, `noopener`, exact origin, and whether the observable state is confidential.
 
-## UI-redress and navigation attack classes (subagent_type: `general`)
+## UI-redress and navigation attack classes
 
 **Clickjacking**
 A framed, state-changing action lacks effective `frame-ancestors`, `X-Frame-Options`, or equivalent UI isolation. Require the sensitive action and confirm it can complete in the framed state; missing headers on read-only content are hardening notes.

@@ -90,7 +90,7 @@ The parent checks that each verifier returned the same fingerprint unless it ide
 
 When verifier evidence updates a ledger check, set that check's `agent_id` to the verifier's canonical ID and list its nonempty repository-relative `reviewed_paths`. Keep the unit-level `reviewed_paths` equal to the union across checks. Use `method: "source"` with `artifact: null` for source-only review. Use `method: "local"` only with a file successfully promoted by trusted parent-side code below `agents/<check.agent_id>/artifacts/`. The unit retains its original assignment owner, so independently owned hunter and verifier checks can coexist. For a carried prior record's seeded `planned` unit there is no prior owner: the verifier that re-checks it becomes the unit's assignment owner, and its re-check is the unit's first check, moving the unit to `candidate` with the carried fingerprint.
 
-If a strict total-agent budget cannot cover every candidate, set the run status to incomplete and follow the deterministic budget rule in `SKILL.md`. An unvalidated candidate remains only in the ledger. It does not enter `findings.json` under any verdict.
+If a strict total-agent budget cannot cover every candidate, set the run status to incomplete and follow the deterministic budget rule in `FULL-AUDIT.md`. An unvalidated candidate remains only in the ledger. It does not enter `findings.json` under any verdict.
 
 ### Phase 4: Write and validate `findings.json`
 
