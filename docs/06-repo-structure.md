@@ -130,7 +130,7 @@ agent-engineering-kit/
 ├── .agents/skills/              # vendored skills, one directory per skill
 ├── scripts/                     # bootstrap, install, install-hooks, setup-check, lint, new-skill
 ├── tests/setup-smoke.sh         # end-to-end install/behaviour regression
-├── docs/                        # playbooks and the troubleshooting guide
+├── docs/                        # playbooks, troubleshooting, shipping and rollback
 └── .github/workflows/kit.yml    # the kit's own CI: lint, actionlint, self-check, smoke
 ```
 

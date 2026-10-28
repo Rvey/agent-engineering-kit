@@ -22,7 +22,7 @@
 #   --force                  overwrite matching kit paths (never removes local additions).
 #   --with-cursor            also copy .cursor/rules/ templates.
 #   --skills-only            copy only skills (no AGENTS.md, setup tools, or .github/).
-#   --no-agents-md           skip the AGENTS.md template copy.
+#   --no-agents-md           skip the AGENTS.md template and the CLAUDE.md that imports it.
 #   --no-github              skip the .github/ loop-enforcement files.
 #   --dry-run                print every copy/skip decision and write nothing.
 #   --yes                    skip the final confirmation prompt in --interactive mode.
@@ -33,6 +33,8 @@
 #                            --update --skills <csv|all> (just those). Works with --dry-run.
 #
 # What it does:
+#   - copies CLAUDE.md (imports AGENTS.md) and a REVIEW.md starter when they are
+#     missing; both are yours once copied, so --force never overwrites them
 #   - copies templates/AGENTS.template.md into <target-dir>/AGENTS.md (skipped
 #     if present unless --force). The template is a shape, not content: the
 #     next step is generating the project file with the agents-md skill.
@@ -371,7 +373,7 @@ if [[ "$INTERACTIVE" -eq 1 ]]; then
     SKILLS_FILTER="$(printf '%s' "$picked" | tr '\n' ',' | tr -s ' ,' ',,' | sed 's/^,//; s/,$//; s/,,*/,/g')"
   fi
   if [[ "$SKILLS_ONLY" -eq 0 && "$SKIP_AGENTS" -eq 0 ]]; then
-    if ! prompt_yesno "Include AGENTS.md template?" "y"; then SKIP_AGENTS=1; fi
+    if ! prompt_yesno "Include AGENTS.md template (and a CLAUDE.md that imports it)?" "y"; then SKIP_AGENTS=1; fi
   fi
   if [[ "$GITHUB_EXPLICIT" -eq 0 && "$SKILLS_ONLY" -eq 0 ]]; then
     if [[ "$WITH_GITHUB" -eq 1 ]]; then
@@ -461,6 +463,16 @@ copy_file() {
     mkdir -p "$(dirname "$dest")"
     cp "$src" "$dest"
     echo "  copy   ${dest#"$TARGET"/}"
+  fi
+}
+
+# Starters the adopter owns once copied: never overwritten, even with --force.
+copy_if_missing() {
+  local src="$1" dest="$2"
+  if [[ -e "$dest" || -L "$dest" ]]; then
+    echo "  skip   ${dest#"$TARGET"/} (exists — yours to edit, never overwritten)"
+  else
+    copy_file "$src" "$dest"
   fi
 }
 
@@ -753,6 +765,10 @@ if [[ "$SKILLS_ONLY" -ne 1 && "$SKIP_AGENTS" -ne 1 ]]; then
   else
     copy_file "$KIT_DIR/templates/AGENTS.template.md" "$TARGET/AGENTS.md"
   fi
+  copy_if_missing "$KIT_DIR/templates/CLAUDE.md" "$TARGET/CLAUDE.md"
+fi
+if [[ "$SKILLS_ONLY" -ne 1 ]]; then
+  copy_if_missing "$KIT_DIR/templates/REVIEW.template.md" "$TARGET/REVIEW.md"
 fi
 
 # Copy missing files on rerun; --force updates kit files without removing local additions.

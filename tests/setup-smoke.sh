@@ -21,6 +21,9 @@ test -f "$target/.agents/skills/full-setup/SKILL.md"
 test -f "$target/.github/workflows/gates.yml"
 test -f "$target/.agents/install-hooks.sh"
 test -f "$target/.agents/setup-check.sh"
+test -f "$target/CLAUDE.md"
+grep -q 'agent-engineering-kit:template' "$target/REVIEW.md"
+echo '# my notes' > "$target/CLAUDE.md"
 echo "local addition" > "$target/.agents/skills/deslop/local.md"
 rm "$target/.agents/skills/deslop/SKILL.md"
 bash "$kit/scripts/bootstrap.sh" "$target" > "$fixture/command.log"
@@ -28,7 +31,8 @@ test -f "$target/.agents/skills/deslop/SKILL.md"
 test -f "$target/.agents/skills/deslop/local.md"
 bash "$kit/scripts/bootstrap.sh" "$target" --force > "$fixture/command.log"
 test -f "$target/.agents/skills/deslop/local.md"
-echo "Installer reruns and force preserve local additions: PASS"
+grep -qx '# my notes' "$target/CLAUDE.md"
+echo "Installer reruns and force preserve local additions and CLAUDE.md: PASS"
 
 echo 'outside the kit' > "$fixture/victim.txt"
 rm "$target/.agents/skills/deslop/SKILL.md"
@@ -74,6 +78,12 @@ cat > "$target/.github/CODEOWNERS" <<'EOF'
 EOF
 awk '/# SETUP: replace this/ { print "      - name: Prepare fixture toolchain"; print "        run: echo ready"; next } { print }' "$target/.github/workflows/gates.yml" > "$fixture/gates.yml"
 cp "$fixture/gates.yml" "$target/.github/workflows/gates.yml"
+expect_failure bash "$target/.agents/setup-check.sh" "$target"
+grep -q 'TODO  Write REVIEW.md' "$fixture/command.log"
+sed -i.bak '/agent-engineering-kit:template/d' "$target/REVIEW.md" && rm -f "$target/REVIEW.md.bak"
+expect_failure bash "$target/.agents/setup-check.sh" "$target"
+grep -q 'replace its empty bullets and table rows' "$fixture/command.log"
+printf '# REVIEW.md\n\nFailure: the verify script stops running.\n' > "$target/REVIEW.md"
 bash "$target/.agents/setup-check.sh" "$target" > "$fixture/check.log"
 grep -q 'Local setup: READY' "$fixture/check.log"
 echo "Readiness check distinguishes incomplete and ready setup: PASS"
@@ -86,6 +96,12 @@ git -C "$target" add feature.txt
 git -C "$target" -c user.name=Smoke -c user.email=smoke@example.invalid commit -qm feature
 head="$(git -C "$target" rev-parse HEAD)"
 cat > "$fixture/body.md" <<'EOF'
+## Risk
+low — fixture change.
+
+## How to revert
+Revert the merge commit.
+
 ## Gates
 Verification passed.
 
@@ -114,6 +130,10 @@ policy_env=(
   SENSITIVE_PATTERNS="$(sed -n "s/^ *SENSITIVE_PATTERNS: '\(.*\)'$/\1/p" "$policy_yml")"
   SCAN_EXTENSIONS="$(sed -n "s/^ *SCAN_EXTENSIONS: '\(.*\)'$/\1/p" "$policy_yml")"
   TEST_PATTERNS="$(sed -n "s/^ *TEST_PATTERNS: '\(.*\)'$/\1/p" "$policy_yml")"
+  HIGH_RISK_PATTERNS="$(sed -n "s/^ *HIGH_RISK_PATTERNS: '\(.*\)'$/\1/p" "$policy_yml")"
+  REQUIRED_SECTIONS="$(sed -n "s/^ *REQUIRED_SECTIONS: '\(.*\)'$/\1/p" "$policy_yml")"
+  RISK_SECTION="$(sed -n "s/^ *RISK_SECTION: '\(.*\)'$/\1/p" "$policy_yml")"
+  HIGH_RISK_APPROVALS="$(sed -n "s/^ *HIGH_RISK_APPROVALS: '\(.*\)'$/\1/p" "$policy_yml")"
 )
 policy_body="$fixture/body.md"
 commit_all() {
@@ -182,6 +202,102 @@ policy_passes
 grep -q 'with a Ratio: note' "$fixture/command.log"
 policy_body="$fixture/body.md"
 echo "Policy requires test evidence and a ratio note for test-heavy diffs: PASS"
+
+grep -v -e '^## Risk' -e '^low — fixture change' "$fixture/body.md" > "$fixture/body-norisk.md"
+policy_body="$fixture/body-norisk.md"
+echo 'export const b = 3;' > "$target/src/b.ts"
+policy_fails_with "'## Risk' section that starts with low, medium or high"
+policy_body="$fixture/body.md"
+mkdir -p "$target/.github/workflows"
+echo 'name: release' > "$target/.github/workflows/release.yml"
+policy_fails_with "must be high (got low): .github/workflows/release.yml"
+
+# High risk: approvals count only humans, on the latest commit, by their last decision.
+sed 's/^low — fixture change\.$/high — release workflow./' "$fixture/body.md" > "$fixture/body-high.md"
+policy_body="$fixture/body-high.md"
+echo 'name: release' > "$target/.github/workflows/release.yml"
+policy_fails_with 'review list unavailable'
+run_high_risk() {
+  local case_head
+  echo 'name: release' > "$target/.github/workflows/release.yml"
+  case_head="$(commit_all case)"
+  sed "s/@HEAD@/$case_head/" "$1" > "$fixture/reviews.tsv"
+  (
+    cd "$target"
+    env "${policy_env[@]}" PR_BODY_FILE="$policy_body" REVIEWS_FILE="$fixture/reviews.tsv" \
+      PR_AUTHOR=author BASE_SHA="$case_base" HEAD_SHA="$case_head" \
+      bash .github/scripts/policy-check.sh > "$fixture/command.log" 2>&1
+  ) && status=0 || status=$?
+  git -C "$target" checkout -q --detach "$case_base"
+  return "$status"
+}
+printf '%s\t%s\t%s\t%s\n' \
+  alice User APPROVED @HEAD@ \
+  ci-bot Bot APPROVED @HEAD@ \
+  'helper[bot]' User APPROVED @HEAD@ \
+  carol User APPROVED stale-sha \
+  dave User APPROVED @HEAD@ \
+  dave User CHANGES_REQUESTED @HEAD@ \
+  author User APPROVED @HEAD@ \
+  alice User COMMENTED @HEAD@ > "$fixture/reviews-one.tsv"
+if run_high_risk "$fixture/reviews-one.tsv"; then
+  echo "Expected a high-risk change with one human approval to fail" >&2
+  exit 1
+fi
+grep -q 'needs 2 human approvals on the latest commit (has 1' "$fixture/command.log"
+printf 'bob\tUser\tAPPROVED\t@HEAD@\n' | cat "$fixture/reviews-one.tsv" - > "$fixture/reviews-two.tsv"
+run_high_risk "$fixture/reviews-two.tsv"
+grep -q 'high-risk change has 2 human approval(s)' "$fixture/command.log"
+
+# policy_try ENV=VALUE... — run the shipped config plus overrides on one commit.
+policy_try() {
+  local case_head
+  case_head="$(commit_all case)"
+  (
+    cd "$target"
+    env "${policy_env[@]}" PR_BODY_FILE="$policy_body" BASE_SHA="$case_base" HEAD_SHA="$case_head" \
+      "$@" bash .github/scripts/policy-check.sh > "$fixture/command.log" 2>&1
+  ) && status=0 || status=$?
+  git -C "$target" checkout -q --detach "$case_base"
+  return "$status"
+}
+echo 'name: release' > "$target/.github/workflows/release.yml"
+if policy_try RISK_SECTION=; then
+  echo "Expected the approval rule to apply with the Risk section turned off" >&2
+  exit 1
+fi
+grep -q 'review list unavailable' "$fixture/command.log"
+
+# An older policy.yml sets none of the new variables: the new checks stay off.
+policy_body="$fixture/body-norisk.md"
+echo 'name: release' > "$target/.github/workflows/release.yml"
+policy_try RISK_SECTION= HIGH_RISK_APPROVALS= REQUIRED_SECTIONS=
+grep -q 'policy check: PASSED' "$fixture/command.log"
+grep -v -e '^## Gates' -e '^Verification passed' "$fixture/body-norisk.md" > "$fixture/body-nogates.md"
+policy_body="$fixture/body-nogates.md"
+echo 'export const b = 4;' > "$target/src/b.ts"
+if policy_try REQUIRED_SECTIONS=; then
+  echo "Expected an empty REQUIRED_SECTIONS to fall back to Gates and Deslop" >&2
+  exit 1
+fi
+grep -q "non-empty '## Gates' section" "$fixture/command.log"
+
+# The tier is the first word of the Risk section, not any tier word in it.
+sed 's/^low — fixture change\.$/Risk: medium — touches the high-score table./' "$fixture/body.md" > "$fixture/body-medium.md"
+policy_body="$fixture/body-medium.md"
+echo 'export const b = 5;' > "$target/src/b.ts"
+policy_try
+grep -q 'risk: medium' "$fixture/command.log"
+sed 's/^low — fixture change\.$/Not high: low./' "$fixture/body.md" > "$fixture/body-prose.md"
+policy_body="$fixture/body-prose.md"
+echo 'export const b = 6;' > "$target/src/b.ts"
+if policy_try; then
+  echo "Expected a Risk section that does not start with a tier to fail" >&2
+  exit 1
+fi
+grep -q "starts with low, medium or high" "$fixture/command.log"
+policy_body="$fixture/body.md"
+echo "Policy requires a risk tier and two human approvals for high-risk changes: PASS"
 
 dry_target="$fixture/dry"
 mkdir "$dry_target"

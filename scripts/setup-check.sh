@@ -55,6 +55,15 @@ else
   missing "Install the kit skills" "rerun scripts/bootstrap.sh <dir>"
 fi
 
+# The starter's empty "-" bullets and "| | |" rows count as unfilled.
+if [ ! -f REVIEW.md ]; then
+  missing "Write REVIEW.md: what counts as failure, paths to ignore, owners" "rerun scripts/bootstrap.sh <dir> without --skills-only, or copy the kit's templates/REVIEW.template.md, then fill it in"
+elif grep -q 'agent-engineering-kit:template' REVIEW.md || grep -qxE '[[:space:]]*-[[:space:]]*|[[:space:]]*\|([[:space:]]*\|)+[[:space:]]*' REVIEW.md; then
+  missing "Write REVIEW.md: what counts as failure, paths to ignore, owners" "replace its empty bullets and table rows with this repo's facts, then delete the template comment"
+else
+  pass "REVIEW.md written for this repo"
+fi
+
 dangling=""
 if [ -f AGENTS.md ]; then
   while IFS= read -r skill_path; do

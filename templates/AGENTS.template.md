@@ -151,16 +151,23 @@ A change is not done until all of these are true:
 3. **Deslop**: run the diff-scoped cleanup pass
    (`.agents/skills/deslop/SKILL.md`) over the branch diff. Behavior-neutral
    edits only; report anything risky instead of touching it.
-4. **Security sign-off**: if the change accepts input, touches auth/authz,
+4. **Fresh-context review**: before opening the PR, have a reviewer that did
+   not write the change review the diff against `REVIEW.md` — `/code-review`
+   and `/security-review` in Claude Code, or a fresh subagent. Fix or answer
+   every finding. Stop after three rounds; after that, review only the new
+   diff.
+5. **Security sign-off**: if the change accepts input, touches auth/authz,
    stores or transmits sensitive data, integrates an external service, adds
    uploads/webhooks, handles PII/payments, or calls an LLM — run the sign-off
    in `.agents/skills/security-audit/SKILL.md` (guidance mode) over the diff.
-5. **Tests**: decide whether the change needs a test at all
+6. **Tests**: decide whether the change needs a test at all
    (`.agents/skills/test-audit/SKILL.md`, step 1); "no new test" is a valid
    answer. Every new test was seen failing first, and the handoff says which
    regression each one catches, or why none were added.
-6. **Handoff**: what changed, which gates ran with results, known risks,
+7. **Handoff**: what changed, which gates ran with results, known risks,
    follow-ups. No silent scope creep.
-7. **PR evidence**: the pull request body carries the Gates, Deslop,
-   Security (when sensitive paths changed), and Tests (when test files
-   changed) sections — the repo's `policy` job blocks the merge otherwise.
+8. **PR evidence**: the pull request body carries the Risk (low, medium or
+   high), How to revert, Gates, Deslop, Security (when sensitive paths
+   changed), and Tests (when test files changed) sections — the repo's
+   `policy` job blocks the merge otherwise. A high-risk change also needs two
+   human approvals on its latest commit.

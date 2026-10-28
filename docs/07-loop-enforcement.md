@@ -58,16 +58,65 @@ In the repo settings, protect the main branch:
 2. Require a pull request before merging, with at least one approval.
 3. Enable **Require review from Code Owners** after renaming
    `CODEOWNERS.example`.
-4. Optional but recommended: require conversation resolution, dismiss stale
-   approvals on push.
+4. Require conversation resolution, so every review thread is answered
+   before merge.
+5. Dismiss stale approvals when new commits are pushed, and require approval
+   of the most recent push.
+6. Never let a bot satisfy a required approval: don't give apps or bot
+   accounts permission to approve pull requests, and keep them out of
+   `CODEOWNERS`. The policy job already ignores bot approvals when it counts
+   approvals for high-risk changes.
+7. Optional: turn on a merge queue, so each PR is tested against the latest
+   main before it lands.
 
 Without step 1 the policy job runs but nobody must obey it.
+
+## Risk tiers: approvals follow what the change touches
+
+Every PR body starts with `## Risk` (low, medium or high) and
+`## How to revert`. The tier depends on the change, never on who wrote it:
+
+| Risk | Examples | Human approvals |
+|---|---|---|
+| Low | Docs, copy, internal-only features, additive changes behind a flag | One (branch protection) |
+| Medium | Ordinary product changes; sensitive areas such as caching or prompts | One (branch protection) |
+| High | Auth, payments, billing, secrets, uploads, webhooks, CI and release workflows, installers | Two, checked by the policy job |
+
+The policy job forces `high` when the diff touches `SENSITIVE_PATTERNS` or
+`HIGH_RISK_PATTERNS` in `policy.yml`, and then counts human approvals on the
+PR's latest commit. Bot approvals, the author, and approvals given before the
+last push don't count. Until two people approve, the check stays red; it
+re-runs on every review. In a repository with fewer than two maintainers,
+lower `HIGH_RISK_APPROVALS` in `policy.yml`.
+
+Start strict and relax with evidence. Once your revert and incident rates
+show that low-risk changes are safe, you can let them merge with no approval
+by moving them to a separate, lighter rule. Lenient paths are for authors you
+already trust.
+
+## Review context and review rounds
+
+`REVIEW.md` tells every reviewer, human or AI, what matters in each part of
+the repo: what counts as a failure, paths to ignore, and how to report (a file
+and line for every finding, a count or "No issues found"). Bootstrap copies a
+starter; `setup-check.sh` fails until you fill it in. Add a line under
+"Recurring issues" whenever the same problem shows up in review twice.
+
+Before opening a PR, the agent has a fresh-context reviewer read the diff
+against `REVIEW.md` (`/code-review` and `/security-review` in Claude Code, or a
+new subagent). Cap review at three rounds; after that, review only the new
+diff. If you can't say what the automated checks would miss, ask for a real
+review, not a quick thumbs-up.
 
 The policy job runs on `pull_request`, so it executes the PR's own copy of
 `policy.yml` and `.github/scripts/policy-check.sh`. A PR can rewrite the check
 that judges it; step 3 is what stops that. Keep the `/.github/workflows/`,
 `/.github/scripts/`, and `/.agents/` lines in `CODEOWNERS` owned by
 maintainers.
+
+What happens after the merge (merge queues, flags, staged rollout, one-step
+revert, and incidents as the reviewer's test set) is in
+[docs/09](09-shipping-and-rollback.md).
 
 ## Escape hatches (for maintainers)
 
@@ -107,4 +156,7 @@ increasing cost:
 - [ ] Gate workflow wired and required (docs/03)
 - [ ] `policy / loop evidence` and `gates / verification gates` required in branch protection
 - [ ] `CODEOWNERS` renamed and owners set
+- [ ] `REVIEW.md` filled in and its template comment removed
+- [ ] Conversation resolution and dismiss-stale-approvals turned on
+- [ ] `HIGH_RISK_APPROVALS` set for the team's size
 - [ ] First PR opened to confirm the policy job fails on a blank body

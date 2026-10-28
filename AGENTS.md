@@ -46,6 +46,7 @@ Suppression rule: every shellcheck disable= must carry an explaining comment. Un
 ## Where rules live
 
 - Root AGENTS.md (this file) -- routing, gates, hard rules for this repo.
+- REVIEW.md -- what reviewers check here: failure classes, paths to ignore, reporting format.
 - templates/AGENTS.template.md -- shape shipped to other repos.
 - .agents/skills/*/SKILL.md -- deep workflows.
 - docs/ -- playbooks and runbooks. CONTRIBUTING.md -- contributor steps.
@@ -56,7 +57,8 @@ Suppression rule: every shellcheck disable= must carry an explaining comment. Un
 1. Owning skill workflow followed, if skill-governed.
 2. Gates above pass -- paste actual command output in handoff.
 3. Deslop pass over branch diff (behavior-neutral edits only).
-4. Security sign-off if sensitive paths changed.
-5. Test audit if tests changed.
-6. Handoff: what changed, gates with results, risks, follow-ups.
-7. PR body carries Gates + Deslop (+ Security when relevant) or policy blocks merge.
+4. Fresh-context review against REVIEW.md: /code-review (and /security-review for sensitive paths) or a fresh subagent. Max three rounds, then new diff only.
+5. Security sign-off if sensitive paths changed.
+6. Test audit if tests changed.
+7. Handoff: what changed, gates with results, risk (low/medium/high), how to revert, follow-ups.
+8. PR body carries Gates + Deslop (+ Security when relevant) or policy blocks merge.

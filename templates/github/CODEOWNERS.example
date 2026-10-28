@@ -3,7 +3,8 @@
 #
 # With branch protection ("Require review from Code Owners"), a matching
 # path forces the right reviewer before merge. Use it to turn the security
-# sign-off into a required review instead of a suggestion.
+# sign-off into a required review instead of a suggestion. Owners must be
+# people or teams of people: a bot or app approval never stands in for them.
 
 # Repo baseline — every change needs one of these reviewers:
 # *                     @your-org/maintainers
@@ -17,8 +18,15 @@
 # /.env.example         @your-org/security
 # **/.env*              @your-org/security
 
+# Release and install paths — a person approves anything that ships or installs:
+# /scripts/release*     @your-org/maintainers
+# **/*install*.sh       @your-org/maintainers
+# **/*install*.ps1      @your-org/maintainers
+
 # Agent instructions — changes to the loop itself need a maintainer:
 # /AGENTS.md            @your-org/maintainers
+# /CLAUDE.md            @your-org/maintainers
+# /REVIEW.md            @your-org/maintainers
 # /.agents/             @your-org/maintainers
 # /.github/workflows/   @your-org/maintainers
 # /.github/scripts/     @your-org/maintainers

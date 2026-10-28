@@ -7,7 +7,10 @@
 #      lines without a `Ratio:` line under ## Tests;
 #   3. added code introduces suppressions (eslint-disable, # noqa,
 #      @ts-ignore) without a written reason;
-#   4. AGENTS.md is missing or still the kit template.
+#   4. AGENTS.md is missing or still the kit template;
+#   5. ## Risk is not low/medium/high, is below high on a high-risk path, or
+#      a high-risk change has fewer than HIGH_RISK_APPROVALS human approvals
+#      on its latest commit (bot and pre-push approvals do not count).
 #
 # Enforce it: branch protection -> require the "policy / loop evidence" check.
 # Bypass: maintainers apply the `policy:skip` label (the job is skipped), or
@@ -20,6 +23,15 @@ name: policy
 on:
   pull_request:
     types: [opened, edited, synchronize, reopened, labeled, unlabeled]
+  # Re-run when reviews change, so the approval count stays current.
+  pull_request_review:
+    types: [submitted, dismissed]
+
+# One run per PR at a time: a slower, older run must not finish last and
+# overwrite the result of a newer one (for example after a new approval).
+concurrency:
+  group: policy-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -33,10 +45,22 @@ jobs:
     env:
       GH_TOKEN: ${{ github.token }}
       PR_NUMBER: ${{ github.event.pull_request.number }}
+      PR_AUTHOR: ${{ github.event.pull_request.user.login }}
       BASE_SHA: ${{ github.event.pull_request.base.sha }}
       HEAD_SHA: ${{ github.event.pull_request.head.sha }}
       # Comma-separated PR body sections that must have content.
-      REQUIRED_SECTIONS: 'Gates,Deslop'
+      REQUIRED_SECTIONS: 'Gates,Deslop,How to revert'
+      # Section whose first word must be low, medium or high. Empty turns the
+      # risk check off; the approval rule below still applies to its paths.
+      RISK_SECTION: 'Risk'
+      # Paths that force Risk: high, on top of SENSITIVE_PATTERNS:
+      # CI and release workflows, the policy script, hooks, installers.
+      HIGH_RISK_PATTERNS: '(^|/)\.github/(workflows|scripts)/|(^|/)\.agents/hooks/|(^|/)[^/]*install[^/]*\.(sh|ps1)$|(^|/)release[^/]*\.(ya?ml|sh)$'
+      # Human approvals a high-risk PR needs on its latest commit, counted
+      # whenever risk is high or the diff touches SENSITIVE_PATTERNS or
+      # HIGH_RISK_PATTERNS. Lower this to 1 (or 0) in a repository with fewer
+      # than two maintainers.
+      HIGH_RISK_APPROVALS: '2'
       # Extra section required when sensitive paths changed.
       SECURITY_SECTION: 'Security'
       # Paths that force the security sign-off section.
@@ -59,7 +83,13 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
       - name: Fetch PR body
         run: gh pr view "$PR_NUMBER" --json body --jq '.body' > "$RUNNER_TEMP/pr-body.md"
+      - name: Fetch reviews
+        run: >-
+          gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/reviews"
+          --jq '.[] | [.user.login, .user.type, .state, .commit_id] | @tsv'
+          > "$RUNNER_TEMP/reviews.tsv"
       - name: Run policy check
         env:
           PR_BODY_FILE: ${{ runner.temp }}/pr-body.md
+          REVIEWS_FILE: ${{ runner.temp }}/reviews.tsv
         run: bash .github/scripts/policy-check.sh

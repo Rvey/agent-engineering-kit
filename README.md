@@ -120,7 +120,7 @@ Pass options to skip the menu. Any argument turns it off, so scripts and CI neve
 
 | Command | What it installs |
 |---|---|
-| `bootstrap.sh .` | Everything: `AGENTS.md` template, every skill, setup tools, `.github/` |
+| `bootstrap.sh .` | Everything: `AGENTS.md` template, `CLAUDE.md` and `REVIEW.md` starters, every skill, setup tools, `.github/` |
 | `bootstrap.sh --preset minimal .` | `AGENTS.md` template, `agents-md` + `full-setup`, setup tools (no `.github/`) |
 | `bootstrap.sh --preset standard .` | minimal + `boost-prompt`, `context-engineering`, `deslop`, `documentation-and-adrs`, `security-audit`, `test-audit`, and `.github/` |
 | `bootstrap.sh --skills deslop,test-audit .` | Everything, but only those skills (`--list-skills` prints every name; add `--skills-only` to copy just the skills) |
@@ -189,8 +189,11 @@ To set it up by hand instead:
 
 1. **Generate `AGENTS.md`.** Run the generation prompt in your agent; see [Generate `AGENTS.md`](#generate-agentsmd).
 2. **Define your verification gates.** The copied `.github/workflows/gates.yml` runs `.agents/verify.sh`. Add your toolchain and dependency install, then require the gate and policy checks in branch protection. See [docs/03-verification-gates.md](docs/03-verification-gates.md).
-3. **Turn on loop enforcement.** Run `bash .agents/install-hooks.sh .`, require the `policy / loop evidence` check, and rename `.github/CODEOWNERS.example` to `.github/CODEOWNERS` with real owners. Why each layer exists: [docs/07-loop-enforcement.md](docs/07-loop-enforcement.md).
-4. **Start every session with** `Read AGENTS.md and follow it.`, then give the agent the task.
+3. **Write `REVIEW.md`.** Fill in the starter: what counts as a failure in this repo, the rules and owner for each area, and the paths reviewers skip. Every reviewer, human or AI, reads it. `CLAUDE.md` is a one-line import of `AGENTS.md`; leave it as is.
+4. **Turn on loop enforcement.** Run `bash .agents/install-hooks.sh .`, rename `.github/CODEOWNERS.example` to `.github/CODEOWNERS` with real owners, and protect `main`: required checks, resolved conversations, dismissed stale approvals. Each setting and why it exists: [docs/07-loop-enforcement.md](docs/07-loop-enforcement.md).
+5. **Start every session with** `Read AGENTS.md and follow it.`, then give the agent the task.
+
+Every PR body then states its **risk** (low, medium or high) and **how to revert** it. Risk follows what the change touches, not who wrote it: the policy check forces `high` for auth, payments, secrets, CI, release and install paths, and a high-risk PR needs two human approvals on its latest commit. After the merge, [docs/09-shipping-and-rollback.md](docs/09-shipping-and-rollback.md) covers merge queues, feature flags, staged rollout, one-step reverts and turning incidents into the reviewer's test set.
 
 Keep the skill set small: prune the skills you don't use, because agents load a short list and ignore a long one. Add a skill when the same workflow has gone wrong twice: vendor it, adapt its commands, and add it to the routing table ([docs/05-adding-a-skill.md](docs/05-adding-a-skill.md)).
 
@@ -271,7 +274,7 @@ The kit grew out of a production Next.js + FastAPI monorepo where agents ship re
 
 ## Contributing
 
-Changes to the kit go through the same loop it asks of everyone else. Before you open a PR, run:
+Changes to the kit go through the same loop it asks of everyone else, and [REVIEW.md](REVIEW.md) says what reviewers check here. Before you open a PR, run:
 
 ```bash
 bash scripts/lint.sh              # syntax, shellcheck, skill frontmatter, links
@@ -294,11 +297,12 @@ Contributor steps and review rules: [CONTRIBUTING.md](CONTRIBUTING.md).
 | Path | What it is |
 |---|---|
 | `templates/AGENTS.template.md` | The starting shape for another repo's `AGENTS.md`: routing table, gates, hard rules, review protocol. **Generate the real file from your repo — don't keep the placeholders.** |
-| `AGENTS.md` | This kit repo's own instructions, generated from its real layout and gates. Not the template — see the row above. |
+| `AGENTS.md`, `REVIEW.md` | This kit repo's own instructions and review rules, generated from its real layout and gates. Not the templates — see the rows above and below. |
 | `.agents/skills/` | 15 vendored skills (`SKILL.md` + references) covering full setup, AGENTS.md generation, prompt refinement, context setup, UI engineering, ADRs/docs, React/Next perf, FastAPI, Python perf, performance work, security review and audits, tests, lint config, diff cleanup, and ADHD-friendly explanations |
 | `.cursor/rules/` | Glob-scoped rule templates for Cursor-compatible agents (web app + Python runtime) |
-| `templates/github/` | Loop-enforcement files copied by bootstrap: PR template, CI gate and policy workflows, check script, CODEOWNERS example |
-| `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement, troubleshooting |
+| `templates/github/` | Loop-enforcement files copied by bootstrap: PR template (risk, revert, gates, deslop, security, tests), CI gate and policy workflows, check script, CODEOWNERS example |
+| `templates/REVIEW.template.md`, `templates/CLAUDE.md` | Starters copied only when missing and never overwritten: what reviewers check, and a `CLAUDE.md` that imports `AGENTS.md` |
+| `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement, troubleshooting, shipping and rollback |
 | `scripts/bootstrap.sh` | Installs and updates the kit in any repository: guided menu, presets, or flags |
 | `scripts/install.sh` | Runs `bootstrap.sh` straight from GitHub, no clone needed |
 | `scripts/install-hooks.sh` | Installs a pre-commit hook that runs the fast gates (`.agents/verify.sh --fast`) |

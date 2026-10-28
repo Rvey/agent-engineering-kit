@@ -1,6 +1,9 @@
 <!--
 The `policy` workflow reads this PR body and fails the PR when:
-- `## Gates` or `## Deslop` is missing or has no real content;
+- `## Gates`, `## Deslop`, `## Risk` or `## How to revert` is missing or has
+  no real content;
+- `## Risk` is not `high` while the diff touches a high-risk path, or a
+  high-risk change lacks two human approvals on its latest commit;
 - `## Security` is missing while the diff touches auth, payments, secrets,
   uploads, webhooks, or .env files;
 - `## Tests` is missing while the diff touches test files, or added test lines
@@ -13,6 +16,25 @@ with facts, then delete the comments.
 <!-- One or two sentences. What changed and why. Link the issue if there is one. -->
 
 ## What changed
+
+## Risk
+
+<!--
+Start with low, medium or high, then say why in one line. Risk follows what
+the change touches, not who wrote it.
+- low: docs, copy, internal-only features, additive changes behind a flag
+- medium: ordinary product changes
+- high: auth, payments, billing, secrets, uploads, webhooks, CI and release
+  workflows, installers. Needs two human approvals on the latest commit.
+-->
+
+## How to revert
+
+<!--
+The one step that undoes this change: revert the merge commit, turn off
+flag X, or roll back deploy Y. Name anything a revert does not undo, such as
+data migrations, sent messages or published packages.
+-->
 
 ## Gates
 

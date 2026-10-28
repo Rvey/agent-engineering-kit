@@ -7,6 +7,29 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Added
 
+- PR risk tiers and revert plans. The PR template and `policy` job require
+  `## Risk` (its first word low, medium or high) and `## How to revert`.
+  The job forces `high` when the diff
+  touches `SENSITIVE_PATTERNS` or the new `HIGH_RISK_PATTERNS` (CI and release
+  workflows, the policy script, hooks, installers), and a high-risk PR then
+  needs `HIGH_RISK_APPROVALS` (default 2) human approvals on its latest
+  commit. Bot approvals, the author and approvals before the last push don't
+  count; the job re-runs on `pull_request_review`, one run per PR at a time.
+  These checks are off in `policy-check.sh` unless `policy.yml` sets
+  `RISK_SECTION` and `HIGH_RISK_APPROVALS`, so an older workflow keeps its
+  old behaviour with the new script.
+- `REVIEW.md` and `CLAUDE.md` starters: bootstrap copies them only when
+  missing and never overwrites them, even with `--force`. `REVIEW.md` says
+  what counts as a failure, per-area rules, paths to ignore and how to report
+  (file and line, a count or "No issues found", three review rounds at most);
+  `setup-check.sh` fails until it is filled in. `CLAUDE.md` imports
+  `AGENTS.md`. The kit has its own `REVIEW.md`.
+- A fresh-context review step in the review protocol (template and root
+  `AGENTS.md`): `/code-review`, `/security-review` or a fresh subagent
+  reviews the diff against `REVIEW.md` before the PR.
+- `docs/09-shipping-and-rollback.md`: merge queues, feature flags, internal
+  users first, staged rollout, one-step reverts, and incidents and reverts as
+  the reviewer's test set.
 - `scripts/install.sh`: one-line remote install
   (`bash <(curl -fsSL …/scripts/install.sh)`). Downloads the kit tarball to a
   temp dir, runs `bootstrap.sh` with the given arguments, and cleans up.
@@ -53,6 +76,14 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Changed
 
+- docs/07 now requires conversation resolution and dismissing stale
+  approvals, says bot approvals never count, and documents the risk tiers.
+  `CODEOWNERS.example` adds release and install paths, `CLAUDE.md` and
+  `REVIEW.md`. `full-setup` fills in `REVIEW.md` and checks those settings.
+  Existing installs: a plain bootstrap rerun adds `CLAUDE.md` and
+  `REVIEW.md`. For the new PR template, `policy.yml` and `policy-check.sh`,
+  copy them from the kit's `templates/github/` and merge your edits; don't
+  use `--force`, which also replaces your `AGENTS.md` and `gates.yml`.
 - `security-audit` is now the kit's only security skill; the vendored
   `security-and-hardening` skill (addyosmani/agent-skills) and its two
   reference files are removed. `security-audit` adds a "security sign-off on a

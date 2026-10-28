@@ -40,14 +40,22 @@ required checks. A copied template or green policy check alone is incomplete.
 6. **Configure review ownership.** For GitHub, copy
    `.github/CODEOWNERS.example` to `.github/CODEOWNERS` with real handles.
    Derive those from existing CODEOWNERS or repository teams when possible;
-   ask if ownership is unknown. Remove irrelevant example paths.
+   ask if ownership is unknown. Remove irrelevant example paths. Then fill in
+   the `REVIEW.md` starter from the same evidence: what counts as a failure
+   in this repo, per-area rules and owners, and paths reviewers skip. Delete
+   its template comment; `setup-check.sh` fails until you do. Leave
+   `CLAUDE.md` as the one-line import of `AGENTS.md`.
 7. **Verify locally.** Run the full verification script, the fast hook gate,
    and `.agents/setup-check.sh .`. Fix failures before
    declaring local setup ready. Review the generated instructions for
    commands that have no config source.
 8. **Verify remote enforcement.** With the user's repository access, require
    `gates / verification gates` and `policy / loop evidence` in branch
-   protection, plus pull requests and code owner review where configured.
+   protection, plus pull requests, code owner review, resolved conversations,
+   and dismissing stale approvals. The kit's
+   [loop-enforcement doc](https://github.com/Rvey/agent-engineering-kit/blob/main/docs/07-loop-enforcement.md)
+   lists each setting. If the repo has fewer than two maintainers, lower
+   `HIGH_RISK_APPROVALS` in `policy.yml` and say so in the handoff.
    Read settings back through the host API or UI; a workflow file alone does
    not make a check required. If access is missing, report the exact setting,
    repository, and reason it remains open. Never claim remote readiness from

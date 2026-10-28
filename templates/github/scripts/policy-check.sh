@@ -10,7 +10,14 @@
 #   2. added test lines exceed TEST_RATIO_MAX times the added production lines
 #      without a `Ratio:` line in the Tests section;
 #   3. added code lines introduce suppressions without a written reason;
-#   4. AGENTS.md is missing or still the kit template.
+#   4. AGENTS.md is missing or still the kit template;
+#   5. RISK_SECTION is set and its first word is not low, medium or high, or
+#      is below high while high-risk or sensitive paths changed;
+#   6. HIGH_RISK_APPROVALS is set and a high-risk change has fewer human
+#      approvals than that on HEAD_SHA (REVIEWS_FILE: login, user type,
+#      state, commit id — tab-separated).
+# Checks 5 and 6 are off unless policy.yml sets their variables, so an older
+# policy.yml keeps its old behaviour with this script.
 #
 # Escape hatches: the `policy:skip` label (job-level), or an inline
 # `policy:allow` on an added line.
@@ -20,6 +27,11 @@ PR_BODY_FILE="${PR_BODY_FILE:?set PR_BODY_FILE to a file holding the PR body}"
 BASE_SHA="${BASE_SHA:-}"
 HEAD_SHA="${HEAD_SHA:-}"
 REQUIRED_SECTIONS="${REQUIRED_SECTIONS:-Gates,Deslop}"
+RISK_SECTION="${RISK_SECTION:-}"
+HIGH_RISK_PATTERNS="${HIGH_RISK_PATTERNS:-}"
+HIGH_RISK_APPROVALS="${HIGH_RISK_APPROVALS:-}"
+REVIEWS_FILE="${REVIEWS_FILE:-}"
+PR_AUTHOR="${PR_AUTHOR:-}"
 SECURITY_SECTION="${SECURITY_SECTION:-Security}"
 SENSITIVE_PATTERNS="${SENSITIVE_PATTERNS:-}"
 SCAN_EXTENSIONS="${SCAN_EXTENSIONS:-}"
@@ -100,6 +112,71 @@ if (( have_diff )) && [[ -n "$SENSITIVE_PATTERNS" && -n "$changed_files" ]] \
     ok "sensitive paths changed with ## $SECURITY_SECTION evidence ($hits)"
   else
     err "sensitive paths changed without a '## $SECURITY_SECTION' section: $hits"
+  fi
+fi
+
+# --- 1b. Risk follows what the change touches, not who wrote it ------------
+
+# human_approvals — reviewers whose latest decision is APPROVED on HEAD_SHA,
+# excluding bots and the PR author. Comments do not change a decision.
+human_approvals() {
+  awk -F'\t' -v head="$HEAD_SHA" -v author="$PR_AUTHOR" '
+    $3 == "COMMENTED" || $3 == "PENDING" { next }
+    { state[$1] = $3; commit[$1] = $4; kind[$1] = $2 }
+    END {
+      n = 0
+      for (u in state) {
+        if (state[u] != "APPROVED" || commit[u] != head) continue
+        if (kind[u] == "Bot" || u ~ /\[bot\]$/ || u == author) continue
+        n++
+      }
+      print n
+    }
+  ' "$REVIEWS_FILE"
+}
+
+# Paths that make a change high risk whatever its Risk section says.
+forced=""
+if (( have_diff )) && [[ -n "$changed_files" ]]; then
+  for pattern in "$SENSITIVE_PATTERNS" "$HIGH_RISK_PATTERNS"; do
+    [[ -n "$pattern" ]] || continue
+    forced="$forced$(grep -iE "$pattern" <<< "$changed_files" || true)"$'\n'
+  done
+fi
+forced="$(grep -v '^$' <<< "$forced" | sort -u | head -5 | paste -sd ', ' -)"
+
+risk=""
+if [[ -n "$RISK_SECTION" ]]; then
+  # The tier is the section's first word, after an optional "Risk:" label.
+  if risk_body="$(section_body "$RISK_SECTION" 2>/dev/null)"; then
+    first="$(grep -m1 -v '^[[:space:]]*$' <<< "$risk_body" | tr '[:upper:]' '[:lower:]' \
+      | sed -E 's/^[^a-z]*//; s/^risk[^a-z]+//')"
+    if [[ "$first" =~ ^(low|medium|high)([^a-z]|$) ]]; then risk="${BASH_REMATCH[1]}"; fi
+  fi
+  if [[ -z "$risk" ]]; then
+    err "PR body needs a '## $RISK_SECTION' section that starts with low, medium or high"
+  else
+    ok "risk: $risk"
+  fi
+  if [[ -n "$forced" && -n "$risk" && "$risk" != high ]]; then
+    err "high-risk paths changed, so '## $RISK_SECTION' must be high (got $risk): $forced"
+  fi
+fi
+
+if [[ -n "$HIGH_RISK_APPROVALS" ]] && [[ "$risk" == high || -n "$forced" ]]; then
+  if [[ ! "$HIGH_RISK_APPROVALS" =~ ^[0-9]+$ ]]; then
+    err "HIGH_RISK_APPROVALS must be a whole number"
+  elif (( HIGH_RISK_APPROVALS > 0 )); then
+    if [[ -z "$REVIEWS_FILE" || ! -f "$REVIEWS_FILE" || -z "$HEAD_SHA" ]]; then
+      err "high-risk change: review list unavailable, so human approvals were not checked"
+    else
+      approvals="$(human_approvals)"
+      if (( approvals >= HIGH_RISK_APPROVALS )); then
+        ok "high-risk change has $approvals human approval(s) on the latest commit"
+      else
+        err "high-risk change needs $HIGH_RISK_APPROVALS human approvals on the latest commit (has $approvals; bot approvals and approvals before the last push do not count)"
+      fi
+    fi
   fi
 fi
 
