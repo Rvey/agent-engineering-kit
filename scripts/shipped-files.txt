@@ -1,0 +1,17 @@
+# Every version of a kit-owned adopter file the kit has shipped. Kit-only data
+# read by scripts/bootstrap.sh; never copied into adopters.
+#
+# One line per shipped version:
+#   <path in the adopter repo> <sha256>
+# bootstrap.sh --update replaces such a file with the kit's current copy only
+# when the adopter's copy matches one of these hashes (unedited kit content).
+# When you change one of these files, add the new version's hash here;
+# tests/setup-smoke.sh fails until the current kit copy is listed.
+.agents/skills/README.md b488582d1aaaa579c96e06ad7df5697c884e5510360194bd4846c8c5f73b91f6
+.agents/skills/README.md daa67b53d605ea47dc0e4494052e4a3f13287f9cb93486c8e2a847679a0fb6b5
+.agents/skills/README.md 9ca1b5131f39e6b82174e35667702a104281f0f82c0e7363abb0f9a75f26553c
+.agents/skills/README.md d65389a22e461cda4d6023ce03be2060b5a839ead964b1398ebb26345fa85934
+.agents/skills/README.md 57e6790b44f113b2192246eae3a701f1304a86b18aad34cb1f8cc6faf81325d4
+.agents/skills/README.md 38480f9856c4922e09eff94cb0999aaf7bef4664e64adb88498c48b7cea9a5e1
+.agents/skills/README.md 3e18631012b580a77ac24bb77037e3184aea89e07929f00868b2cdbb0ccac69c
+.agents/skills/README.md 144f63b2e3eaeb13c7f34e9c91f97f356d25cd18403114cc9dfafff25ba24b4d

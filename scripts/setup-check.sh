@@ -55,6 +55,18 @@ else
   missing "Install the kit skills" "rerun scripts/bootstrap.sh <dir>"
 fi
 
+dangling=""
+if [ -f AGENTS.md ]; then
+  while IFS= read -r skill_path; do
+    [ -f "$skill_path" ] || dangling="$dangling $skill_path"
+  done < <(grep -oE '\.agents/skills/[A-Za-z0-9_-]+/SKILL\.md' AGENTS.md | sort -u || true)
+fi
+if [ -z "$dangling" ]; then
+  pass "AGENTS.md skill paths resolve"
+else
+  missing "AGENTS.md routes to missing skills:$dangling" "point those rows at installed skills (bootstrap.sh --update names replacements)"
+fi
+
 if [ -f .agents/install-hooks.sh ] && [ -f .agents/setup-check.sh ] && [ -f .agents/hooks/pre-commit ] && [ -f .agents/verify-templates/shell.sh ]; then
   pass "Local setup tools"
 else

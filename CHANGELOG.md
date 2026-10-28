@@ -22,8 +22,7 @@ versioning once tagged; entries land under Unreleased until then.
 - Vendored `security-audit` from
   [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)
   (MIT, commit `c1c8a8c`) with its phase docs, domain companions,
-  report schema, and zero-dependency Node validators. It owns auditing
-  existing code; `security-and-hardening` still owns writing secure code.
+  report schema, and zero-dependency Node validators.
   Listed in the template routing table, skill catalogs, README, and CREDITS.
 - `bruh` skill: turns dense LLM output, specs, logs, and unfamiliar-domain
   jargon into short, ADHD-friendly explanations for engineers. It keeps the
@@ -47,6 +46,25 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Changed
 
+- `security-audit` is now the kit's only security skill; the vendored
+  `security-and-hardening` skill (addyosmani/agent-skills) and its two
+  reference files are removed. `security-audit` adds a "security sign-off on a
+  change" step in guidance mode, which the template routing row, review
+  protocol, workflow Stage 6, and root `AGENTS.md` now point at. Its
+  `SKILL.md` drops from 194 to about 90 lines: full-audit setup, write
+  isolation, prior runs, profiles, and budget moved verbatim to `FULL-AUDIT.md`;
+  the unused `subagent_type` heading tags and platform-terminology section are
+  gone; the default output directory is `~/.security-audit/<repo>/run-<N>`.
+  Phase rules, `report-schema.json`, and the validators are unchanged. The
+  `standard` bootstrap preset installs `security-audit` instead. Existing
+  installs keep their old `security-and-hardening` copy until
+  `bootstrap.sh --update` removes it: it does so only with `--yes` or a yes at
+  the prompt, and only when every file matches a hash the kit shipped
+  (`scripts/retired-skills.txt`); edited copies stay. The same rule
+  refreshes `.agents/skills/README.md` when it is an unedited older kit
+  version (`scripts/shipped-files.txt`). It then lists the `AGENTS.md` and
+  kept README lines that still name the old skill, and `setup-check.sh` fails
+  while `AGENTS.md` routes to a missing `SKILL.md`.
 - `test-audit` rewritten to stop test bloat. `SKILL.md` is now a short
   writing guide: decide first whether the change needs a test ("no new test"
   is the default for refactors, docs, and config), write each test fail-first

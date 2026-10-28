@@ -1,69 +1,23 @@
 # Agent Engineering Kit
 
-**A copy-paste operating system for building software with AI coding agents: skills, instructions, verification gates, and hard-won rules that keep quality high as a codebase grows.**
+**Skills, instructions, and verification gates that keep AI coding agents shipping clean code, in any repository and any stack.**
 
-Distilled from the day-to-day workflow of a production monorepo (Next.js + FastAPI) where agents do real shipping work. Everything here is stack-agnostic — the examples use that stack because that's where the rules were battle-tested. Swap in your own commands and keep the structure.
+[![kit](https://github.com/Rvey/agent-engineering-kit/actions/workflows/kit.yml/badge.svg)](https://github.com/Rvey/agent-engineering-kit/actions/workflows/kit.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
----
+[Quickstart](#quickstart) · [Generate AGENTS.md](#generate-agentsmd) · [Usage](#usage) · [Updating](#updating-an-existing-install) · [How it works](#how-it-works) · [Skills](#skills) · [Why](#why-this-exists) · [Contributing](#contributing) · [What's inside](#whats-inside)
 
-## Why this exists
-
-Ad-hoc prompting produces ad-hoc codebases. The moment a second person (or a second agent session) touches a repo, you need:
-
-- **Shared standards** the agent actually reads before it writes — not tribal knowledge
-- **Repeatable workflows** for the tasks that keep going wrong (tests, perf, security, cleanup)
-- **Verification gates** that are commands, not opinions — so "done" is provable
-- **A review protocol** that catches AI slop before a human reviewer wastes time on it
-
-This kit packages all four into files you drop into any new project.
-
-## What's inside
-
-| Path | What it is |
-|---|---|
-| `templates/AGENTS.template.md` | The starting shape for another repo's `AGENTS.md`: routing table, gates, hard rules, review protocol. **Generate the real file from your repo — don't keep the placeholders.** |
-| `AGENTS.md` | This kit repo's own instructions, generated from its real layout and gates. Not the template — see the row above. |
-| `.agents/skills/` | 16 vendored skills (`SKILL.md` + references) covering full setup, AGENTS.md generation, prompt refinement, context setup, UI engineering, ADRs/docs, React/Next perf, FastAPI, Python perf, performance work, security hardening and audits, tests, lint config, diff cleanup, and ADHD-friendly explanations |
-| `.cursor/rules/` | Glob-scoped rule templates for Cursor-compatible agents (web app + Python runtime) |
-| `templates/github/` | Loop-enforcement files copied by bootstrap: PR template, CI gate and policy workflows, check script, CODEOWNERS example |
-| `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement, troubleshooting |
-| `scripts/bootstrap.sh` | Installs the kit into any repository in one command |
-| `scripts/install.sh` | Runs `bootstrap.sh` straight from GitHub, no clone needed |
-| `scripts/install-hooks.sh` | Installs a pre-commit hook that runs the fast gates (`.agents/verify.sh --fast`) |
-| `scripts/setup-check.sh` | Reports local setup status and names missing steps |
-| `scripts/new-skill.sh` | Scaffolds a correctly shaped new skill |
-| `scripts/lint.sh` | Fast static checks: shell syntax, shellcheck, skill frontmatter, markdown links |
-| `templates/verify/` | Ready-to-edit `verify.sh` starters for shell, Node, and Python repos |
-| `tests/setup-smoke.sh` | Disposable-repo regression test for install, hooks, readiness, and policy |
-| `CREDITS.md` | Upstream sources and licenses for every vendored skill |
+One command adds an `AGENTS.md`, a set of task skills, and CI gates to your repository. Agents read your rules before they write, load the skill that owns the task, and can't call the work done until lint, types, tests, and build pass.
 
 ## Quickstart
 
-```bash
-git clone https://github.com/Rvey/agent-engineering-kit.git ~/agent-engineering-kit
-
-cd /path/to/your-project
-~/agent-engineering-kit/scripts/bootstrap.sh .
-
-# Optional: include the Cursor rule templates
-~/agent-engineering-kit/scripts/bootstrap.sh . --with-cursor
-```
-
-No clone? Run it straight from GitHub in the project root. With no arguments it opens the menu; any `bootstrap.sh` option works too (`--update`, `--preset standard`, `--dry-run`):
+Run this from your project's root:
 
 ```bash
 bash <(curl -fsSL https://raw.githubusercontent.com/Rvey/agent-engineering-kit/main/scripts/install.sh)
 ```
 
-It downloads the kit into a temporary folder, runs `bootstrap.sh` from there, and deletes the download. Set `AGENT_KIT_REF` to a tag or commit to pin the version, and `AGENT_KIT_SHA256` to verify the tarball. Prefer `bash <(curl …)` over `curl … | bash`: the menu works either way, but you can read the script first with `curl -fsSL <url> | less`.
-
-Preview every action first without writing anything:
-
-```bash
-~/agent-engineering-kit/scripts/bootstrap.sh . --dry-run
-```
-
-Then ask your agent in the target repository:
+Pick **install** and answer a few questions. Then ask your agent to finish the setup:
 
 ```text
 Complete this repository's Agent Engineering Kit setup. Follow
@@ -71,34 +25,15 @@ Complete this repository's Agent Engineering Kit setup. Follow
 only for information you cannot determine. Verify both local and remote setup.
 ```
 
-Bootstrap also copies the hook installer and readiness check into `.agents/`,
-so the target repository has the commands it needs after adoption. The agent
-generates project-specific instructions and gates, configures CI
-for the repository's toolchain, integrates the fast commit hook, and checks
-review enforcement. Run `bash .agents/setup-check.sh .`
-to check local readiness. It lists missing steps and exits nonzero until
-local setup is ready. Remote branch protection needs separate verification.
+Check the result:
 
-Each missing step prints its own fix. Two shortcuts cover most of them:
-`bash .agents/setup-check.sh . --fix` scaffolds a starter `.agents/verify.sh`
-and installs the fast pre-commit hook, and `.agents/verify-templates/` holds
-editable starters for shell, Node, and Python repositories. Replace every
-`SETUP:` line with a real command before calling setup done — the readiness
-check keeps failing until you do.
+```bash
+bash .agents/setup-check.sh .
+```
 
-If you prefer to set up each part yourself:
+It lists each missing step with its fix and exits non-zero until local setup is ready. From then on, start every agent session with `Read AGENTS.md and follow it.`
 
-1. **Generate `AGENTS.md`** — open your agent in the project and run the
-   generation prompt. Full instructions and copy-paste prompts:
-   [Generate `AGENTS.md`](#generate-agentsmd).
-2. **Define your verification gates** — see [docs/03-verification-gates.md](docs/03-verification-gates.md). The copied `gates.yml` runs `.agents/verify.sh`; add your repo's toolchain and dependency install, then require both gate and policy checks in branch protection.
-3. **Turn on loop enforcement** — install the pre-commit hook
-   (`~/agent-engineering-kit/scripts/install-hooks.sh .`), require the
-   `policy / loop evidence` check in branch protection, and rename
-   `.github/CODEOWNERS.example` to `.github/CODEOWNERS` with real owners.
-   Why each layer exists: [docs/07-loop-enforcement.md](docs/07-loop-enforcement.md).
-4. **Start a session with**: `Read AGENTS.md and follow it.` Then give the agent the task.
-5. When the task is vague, the agent should load `boost-prompt` and produce a brief before writing code. When it isn't, it should load the owning skill and go.
+**Requirements:** bash 3.2 or newer, `curl`, `tar`, and `git`, on macOS or Linux. [`gum`](https://github.com/charmbracelet/gum) or [`fzf`](https://github.com/junegunn/fzf) give nicer pickers in the menu but aren't needed.
 
 ## Generate `AGENTS.md`
 
@@ -167,7 +102,101 @@ Re-run the generation whenever the stack changes or an incident class appears.
 Then wire the same gates into CI and start sessions with `Read AGENTS.md and
 follow it.`
 
-## The loop
+## Usage
+
+### The menu
+
+Run with no arguments to open the menu:
+
+- **install**: guided setup. Pick a preset, the skills, and whether to add the `AGENTS.md` template, the `.github/` files, and the Cursor rules.
+- **update**: bring an existing install up to date. See [Updating an existing install](#updating-an-existing-install).
+- **list**: print the skills the kit ships.
+
+It suggests **update** when the folder already has an install.
+
+### Options
+
+Pass options to skip the menu. Any argument turns it off, so scripts and CI never wait on a prompt.
+
+| Command | What it installs |
+|---|---|
+| `bootstrap.sh .` | Everything: `AGENTS.md` template, every skill, setup tools, `.github/` |
+| `bootstrap.sh --preset minimal .` | `AGENTS.md` template, `agents-md` + `full-setup`, setup tools (no `.github/`) |
+| `bootstrap.sh --preset standard .` | minimal + `boost-prompt`, `context-engineering`, `deslop`, `documentation-and-adrs`, `security-audit`, `test-audit`, and `.github/` |
+| `bootstrap.sh --skills deslop,test-audit .` | Everything, but only those skills (`--list-skills` prints every name; add `--skills-only` to copy just the skills) |
+| `bootstrap.sh --interactive .` | The guided install, without the first menu |
+
+Add `--dry-run` to any of them to print every copy and skip without writing anything, `--with-cursor` for the Cursor rule templates, or `--no-github` for non-GitHub hosts. `bootstrap.sh --help` lists every option. The same options work after the one-liner, for example `bash <(curl -fsSL …/install.sh) --preset standard .`
+
+### Run from a local clone
+
+The one-liner downloads the kit into a temporary folder, runs `scripts/bootstrap.sh` from there, and deletes the download. To keep a copy instead:
+
+```bash
+git clone https://github.com/Rvey/agent-engineering-kit.git ~/agent-engineering-kit
+cd /path/to/your-project
+~/agent-engineering-kit/scripts/bootstrap.sh
+```
+
+### Pin a version
+
+The one-liner installs from `main` by default. Set `AGENT_KIT_REF` to a tag or commit to pin it, and `AGENT_KIT_SHA256` to stop on a download that doesn't match:
+
+```bash
+AGENT_KIT_REF=<tag or commit> bash <(curl -fsSL https://raw.githubusercontent.com/Rvey/agent-engineering-kit/main/scripts/install.sh)
+```
+
+To read the script before running it: `curl -fsSL <url> | less`.
+
+### Updating an existing install
+
+From the project root, pick **update** in the menu, or go straight there:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Rvey/agent-engineering-kit/main/scripts/install.sh) --update .
+```
+
+From a local clone, run `git -C ~/agent-engineering-kit pull`, then `~/agent-engineering-kit/scripts/bootstrap.sh --update .`.
+
+It compares your install with the kit and labels what it finds:
+
+| Label | What it means | What `--update` does about it |
+|---|---|---|
+| `update <skill>` | An installed skill whose files differ from the kit's | Overwrites the files that differ; your extra files stay |
+| `new <skill>` | A kit skill you don't have | Copies it in |
+| `retired <skill>` | A skill the kit removed, shown with its replacement | Deletes the old folder, but only if every file in it is unedited kit content |
+| `update .agents/skills/README.md` | An older kit copy of the skills README that you never edited | Replaces it with the current copy |
+| `keep` | Something you edited or linked locally | Leaves it alone for you to fix by hand |
+
+Then it asks what to do: update the installed skills, add all new ones, both, or go skill by skill. Deleting a retired skill and replacing the README each ask for their own yes. Without a terminal, decide up front: `--update --yes` does everything in the table, and `--update --skills deslop,bruh` handles just those skills (it only reports retired skills and the README). Add `--dry-run` to see the plan first.
+
+`--update` touches only `.agents/skills/` and never edits `AGENTS.md`. Two follow-ups are yours:
+
+- For each skill it added, copy its routing row from the kit's `templates/AGENTS.template.md` into your `AGENTS.md` (or ask your agent to).
+- For a retired skill, it prints every `file:line` in `AGENTS.md` (and in a skills README it kept) that still names it. Point those lines at the replacement.
+
+Then run `bash .agents/setup-check.sh .`. It fails while `AGENTS.md` points at a skill that isn't installed.
+
+The older flag route still works: `bootstrap.sh . --skills-only` copies missing skill files, and adding `--force` also overwrites kit skill files that differ. It never deletes anything, never touches `AGENTS.md`, and leaves retired skills in place.
+
+### After installing
+
+Bootstrap copies the hook installer and the readiness check into `.agents/`, so your repository has the commands it needs. The `full-setup` prompt in the [Quickstart](#quickstart) has your agent generate project-specific instructions and gates, configure CI for your toolchain, install the fast commit hook, and check review enforcement. Remote branch protection needs a separate check.
+
+Two shortcuts cover most missing steps: `bash .agents/setup-check.sh . --fix` creates a starter `.agents/verify.sh` and installs the fast pre-commit hook, and `.agents/verify-templates/` holds starters for shell, Node, and Python. Replace every `SETUP:` line with a real command; the readiness check keeps failing until you do.
+
+To set it up by hand instead:
+
+1. **Generate `AGENTS.md`.** Run the generation prompt in your agent; see [Generate `AGENTS.md`](#generate-agentsmd).
+2. **Define your verification gates.** The copied `.github/workflows/gates.yml` runs `.agents/verify.sh`. Add your toolchain and dependency install, then require the gate and policy checks in branch protection. See [docs/03-verification-gates.md](docs/03-verification-gates.md).
+3. **Turn on loop enforcement.** Run `bash .agents/install-hooks.sh .`, require the `policy / loop evidence` check, and rename `.github/CODEOWNERS.example` to `.github/CODEOWNERS` with real owners. Why each layer exists: [docs/07-loop-enforcement.md](docs/07-loop-enforcement.md).
+4. **Start every session with** `Read AGENTS.md and follow it.`, then give the agent the task.
+
+Keep the skill set small: prune the skills you don't use, because agents load a short list and ignore a long one. Add a skill when the same workflow has gone wrong twice: vendor it, adapt its commands, and add it to the routing table ([docs/05-adding-a-skill.md](docs/05-adding-a-skill.md)).
+
+## How it works
+
+Every task follows the same loop. A vague request becomes a brief first; then the agent loads the one skill that owns the task, implements it, cleans up the diff, and proves it with the gates before handing off.
 
 ```
         vague task                              clear task
@@ -203,7 +232,7 @@ follow it.`
 
 Full walkthrough: [docs/01-agent-workflow.md](docs/01-agent-workflow.md).
 
-## The skills
+## Skills
 
 | Skill | Load it when |
 |---|---|
@@ -217,8 +246,7 @@ Full walkthrough: [docs/01-agent-workflow.md](docs/01-agent-workflow.md).
 | `fastapi-python` | Writing or reviewing FastAPI/Python API code |
 | `python-performance-optimization` | Profiling or optimizing Python hot paths |
 | `performance-optimization` | Any performance work, any layer — measure first |
-| `security-and-hardening` | Input handling, auth, data storage, external APIs, uploads, LLM features, dependency audits |
-| `security-audit` | Security audit, pen test, or vulnerability review of an existing codebase |
+| `security-audit` | Security sign-off on changes touching input, auth, data, external APIs, uploads, or LLMs; vulnerability review, audit, or pen test |
 | `test-audit` | Writing, changing, reviewing, or pruning tests |
 | `eslint-prettier-config` | Setting up or changing lint/format configuration |
 | `deslop` | After a feature lands, before review — strip AI slop from the diff |
@@ -226,55 +254,61 @@ Full walkthrough: [docs/01-agent-workflow.md](docs/01-agent-workflow.md).
 
 Details and provenance: [docs/02-skill-catalog.md](docs/02-skill-catalog.md) and [`.agents/skills/README.md`](.agents/skills/README.md).
 
-## The hard rules
+## Hard rules
 
 The eight performance guards in [docs/04-performance-guards.md](docs/04-performance-guards.md) (and summarized in `AGENTS.md`) each came from a real production incident — dep-less effects firing on every drag frame, `setState` per stream token, unstable callbacks resetting pollers, and friends. They are the highest-leverage part of this kit: every one of them is a bug class that agents reintroduce by default unless the rule is in front of them.
 
-## Adopting this in an existing repo
+## Why this exists
 
-1. Run the bootstrap.
-2. Generate `AGENTS.md` with the `agents-md` skill (see [Generate `AGENTS.md`](#generate-agentsmd)) — commands, paths, and the incidents your team never wants to repeat.
-3. Turn on enforcement: `scripts/install-hooks.sh .`, require the `policy / loop evidence` check, set CODEOWNERS — see [docs/07-loop-enforcement.md](docs/07-loop-enforcement.md).
-4. Prune the skills you don't need. A smaller skill set that agents actually load beats a big one they ignore.
-5. Add a skill whenever a workflow has burned you twice: vendor it, adapt the commands, wire it into the routing table. See [docs/05-adding-a-skill.md](docs/05-adding-a-skill.md).
+AI agents write code fast, and they repeat the same mistakes just as fast. They skip tests, invent commands, miss conventions nobody wrote down, and call work done without running it. Better prompts don't fix that. Written structure that every session reads does:
 
-### Updating an existing install
+- **Rules the agent reads first.** One `AGENTS.md` with your real commands and the incidents you never want repeated, instead of knowledge that lives in people's heads.
+- **A playbook for each task.** Skills for the work that keeps going wrong: tests, performance, security, cleanup.
+- **Proof instead of opinion.** Gates are commands. Work is done when lint, types, tests, and build pass, and the PR shows the output.
+- **Review that starts clean.** A cleanup pass and a PR policy check catch AI slop before a reviewer spends time on it.
 
-Run `bootstrap.sh` (or the `install.sh` one-liner from the Quickstart) with no arguments from the project root to get a menu: install the kit, update or add skills, or list them. It defaults to update when the directory already has an install. Any argument skips the menu, so scripts and CI behave as before.
+The kit grew out of a production Next.js + FastAPI monorepo where agents ship real work. The rules are stack-agnostic; the examples use that stack because that's where they were tested.
 
-When the kit ships new or changed skills, run the update mode from the project root:
+## Contributing
 
-```bash
-~/agent-engineering-kit/scripts/bootstrap.sh --update .
-```
-
-It lists each kit skill as `update` (installed, differs from the kit), `new` (not installed), or up to date, then asks whether to update the installed skills, add all new ones, do both, or decide skill by skill. It touches only `.agents/skills/`, overwrites only the kit files that differ, and keeps your extra local files. Without a terminal, pick up front: `--update --yes` (update and add everything) or `--update --skills deslop,bruh` (just those). Add `--dry-run` to preview.
-
-The older flag-based route still works:
-
-
-```bash
-# Preview, then copy the new skills (missing files copy without --force)
-~/agent-engineering-kit/scripts/bootstrap.sh . --skills-only --dry-run
-~/agent-engineering-kit/scripts/bootstrap.sh . --skills-only
-```
-
-Add `--force` to also refresh already-vendored skill files to their kit version — it overwrites only matching kit paths, never your extra local files. `--skills-only` never touches your generated `AGENTS.md`; merge the new routing rows from the kit's `templates/AGENTS.template.md` into it by hand (or ask your agent to merge them) instead of forcing a full bootstrap, which would overwrite it with the blank template. The same applies to `.agents/skills/README.md` if you edited it. Then run `bash .agents/setup-check.sh .` to confirm readiness.
-
-## Working on the kit itself
-
-Contributions run the same loop the kit asks of everyone else. Before opening
-a PR in this repository:
+Changes to the kit go through the same loop it asks of everyone else. Before you open a PR, run:
 
 ```bash
 bash scripts/lint.sh              # syntax, shellcheck, skill frontmatter, links
-bash tests/setup-smoke.sh         # install, hooks, readiness, policy (slow)
-bash scripts/setup-check.sh --kit # kit dogfood check
+bash tests/setup-smoke.sh         # install, update, hooks, readiness, policy (slow)
+bash scripts/setup-check.sh --kit # kit self-check
 actionlint .github/workflows/kit.yml
 ```
 
-`.github/workflows/kit.yml` runs the same checks on every push. Details and
-the contributing rules: [CONTRIBUTING.md](CONTRIBUTING.md).
+CI runs the same checks on every push ([`.github/workflows/kit.yml`](.github/workflows/kit.yml)).
+
+Two data files keep `--update` safe for adopters:
+
+- When you change `.agents/skills/README.md`, add the new version's hash to `scripts/shipped-files.txt`. The smoke test fails until you do.
+- When you retire a skill, add one line for each file it ever shipped to `scripts/retired-skills.txt`, so `--update` can recognise unedited copies and remove them.
+
+Contributor steps and review rules: [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## What's inside
+
+| Path | What it is |
+|---|---|
+| `templates/AGENTS.template.md` | The starting shape for another repo's `AGENTS.md`: routing table, gates, hard rules, review protocol. **Generate the real file from your repo — don't keep the placeholders.** |
+| `AGENTS.md` | This kit repo's own instructions, generated from its real layout and gates. Not the template — see the row above. |
+| `.agents/skills/` | 15 vendored skills (`SKILL.md` + references) covering full setup, AGENTS.md generation, prompt refinement, context setup, UI engineering, ADRs/docs, React/Next perf, FastAPI, Python perf, performance work, security review and audits, tests, lint config, diff cleanup, and ADHD-friendly explanations |
+| `.cursor/rules/` | Glob-scoped rule templates for Cursor-compatible agents (web app + Python runtime) |
+| `templates/github/` | Loop-enforcement files copied by bootstrap: PR template, CI gate and policy workflows, check script, CODEOWNERS example |
+| `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement, troubleshooting |
+| `scripts/bootstrap.sh` | Installs and updates the kit in any repository: guided menu, presets, or flags |
+| `scripts/install.sh` | Runs `bootstrap.sh` straight from GitHub, no clone needed |
+| `scripts/install-hooks.sh` | Installs a pre-commit hook that runs the fast gates (`.agents/verify.sh --fast`) |
+| `scripts/setup-check.sh` | Reports local setup status and names missing steps, including `AGENTS.md` rows that point at skills that aren't installed |
+| `scripts/new-skill.sh` | Scaffolds a correctly shaped new skill |
+| `scripts/lint.sh` | Fast static checks: shell syntax, shellcheck, skill frontmatter, markdown links |
+| `scripts/retired-skills.txt`, `scripts/shipped-files.txt` | Kit-only data for `--update`: hashes of every file the kit shipped for retired skills and for the skills README, so it only deletes or replaces files you never edited |
+| `templates/verify/` | Ready-to-edit `verify.sh` starters for shell, Node, and Python repos |
+| `tests/setup-smoke.sh` | Disposable-repo regression test for install, update, remote install, hooks, readiness, and policy |
+| `CREDITS.md` | Upstream sources and licenses for every vendored skill |
 
 ## Credits
 

@@ -483,9 +483,132 @@ apply_skill_update() {
   done < <(skill_changed_files "$name")
 }
 
+# Retired skills: recorded in a kit-only data file, never copied to adopters.
+RETIRED_FILE="$KIT_DIR/scripts/retired-skills.txt"
+
+retired_names() {
+  [[ -f "$RETIRED_FILE" ]] || return 0
+  awk '!/^#/ && NF == 4 && $1 !~ /[\/.]/ { print $1 }' "$RETIRED_FILE" | sort -u
+}
+
+retired_replacement() {
+  awk -v n="$1" '!/^#/ && NF == 4 && $1 == n { print $2; exit }' "$RETIRED_FILE"
+}
+
+sha256_of() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    sha256sum "$1" | cut -d' ' -f1
+  else
+    shasum -a 256 "$1" | cut -d' ' -f1
+  fi
+}
+
+# Why a retired skill copy must stay, or nothing when every file is a pristine kit file.
+retired_keep_reason() {
+  local name="$1" dir="$TARGET/.agents/skills/$1" entry rel bad=0
+  if [[ -L "$TARGET/.agents" || -L "$TARGET/.agents/skills" || -L "$dir" || ! -d "$dir" ]]; then
+    echo "symlinked or non-directory folder"
+    return 0
+  fi
+  if ! command -v sha256sum >/dev/null 2>&1 && ! command -v shasum >/dev/null 2>&1; then
+    echo "no sha256sum or shasum to verify it"
+    return 0
+  fi
+  while IFS= read -r -d '' entry; do
+    if [[ -L "$entry" ]]; then bad=$((bad + 1)); continue; fi
+    [[ -d "$entry" ]] && continue
+    if [[ ! -f "$entry" || -n "$(find "$entry" -prune -links +1)" ]]; then bad=$((bad + 1)); continue; fi
+    rel="${entry#"$dir"/}"
+    if ! awk -v n="$name" -v p="$rel" '!/^#/ && NF == 4 && $1 == n && $3 == p { print $4 }' "$RETIRED_FILE" \
+      | grep -qxF "$(sha256_of "$entry")"; then
+      bad=$((bad + 1))
+    fi
+  done < <(find "$dir" -mindepth 1 -print0)
+  if [[ "$bad" -gt 0 ]]; then echo "$bad file(s) edited or added locally"; fi
+}
+
+# Cleanup of adopter files needs --yes or a yes at the prompt; --skills alone never prompts.
+cleanup_allowed() {
+  local question="$1" label="$2"
+  [[ "$ASSUME_YES" -eq 1 ]] && return 0
+  if [[ -n "$SKILLS_FILTER" ]]; then
+    echo "  skip   $label (rerun with --update --yes, or --update in a terminal)"
+    return 1
+  fi
+  require_tty "--update without --yes or --skills"
+  if prompt_yesno "$question" "y"; then return 0; fi
+  echo "  keep   $label (kept at your request)"
+  return 1
+}
+
+# Kit-owned adopter files outside skill folders, with every hash the kit shipped for them.
+SHIPPED_FILE="$KIT_DIR/scripts/shipped-files.txt"
+
+shipped_paths() {
+  [[ -f "$SHIPPED_FILE" ]] || return 0
+  awk '!/^#/ && NF == 2 && $1 ~ /^\.agents\// && $1 !~ /\.\./ { print $1 }' "$SHIPPED_FILE" | sort -u
+}
+
+# current | stale (unedited older kit version) | edited | unsafe | absent
+shipped_state() {
+  local rel="$1" dest="$TARGET/$1"
+  if [[ ! -e "$dest" && ! -L "$dest" ]] || [[ ! -f "$KIT_DIR/$rel" ]]; then echo absent; return 0; fi
+  if [[ -L "$TARGET/.agents" || -L "$TARGET/.agents/skills" || -L "$dest" || ! -f "$dest" ]] \
+    || [[ -n "$(find "$dest" -prune -links +1)" ]]; then
+    echo unsafe; return 0
+  fi
+  if cmp -s "$KIT_DIR/$rel" "$dest"; then echo current; return 0; fi
+  if ! command -v sha256sum >/dev/null 2>&1 && ! command -v shasum >/dev/null 2>&1; then echo edited; return 0; fi
+  if awk -v p="$rel" '!/^#/ && NF == 2 && $1 == p { print $2 }' "$SHIPPED_FILE" | grep -qxF "$(sha256_of "$dest")"; then
+    echo stale
+  else
+    echo edited
+  fi
+}
+
+# Remove one retired skill copy if authorized and pristine; otherwise say why it stays.
+handle_retired() {
+  local name="$1" repl reason
+  repl="$(retired_replacement "$name")"
+  reason="$(retired_keep_reason "$name")"
+  if [[ -n "$reason" ]]; then
+    echo "  keep   $name ($reason, remove by hand)"
+    return 0
+  fi
+  if ! cleanup_allowed "Remove retired $name (replaced by $repl, no local edits)?" "$name"; then
+    return 0
+  fi
+  if [[ "$DRY" -eq 1 ]]; then
+    echo "  plan   remove .agents/skills/$name/"
+  else
+    rm -rf -- "$TARGET/.agents/skills/$name"
+    echo "  remove .agents/skills/$name/"
+  fi
+}
+
+# Lines in AGENTS.md and the skills README that still name a retired skill. Never edits them.
+report_retired_refs() {
+  local name repl f lines line
+  while IFS= read -r name; do
+    repl="$(retired_replacement "$name")"
+    lines=""
+    for f in AGENTS.md .agents/skills/README.md; do
+      [[ -f "$TARGET/$f" && ! -L "$TARGET/$f" ]] || continue
+      while IFS= read -r line; do
+        [[ -n "$line" ]] && lines="$lines  $f:$line"$'\n'
+      done < <(grep -nF -- "$name" "$TARGET/$f" | cut -d: -f1 || true)
+    done
+    if [[ -n "$lines" ]]; then
+      echo
+      echo "These lines still name $name — point them at .agents/skills/$repl/SKILL.md:"
+      printf '%s' "$lines"
+    fi
+  done < <(retired_names)
+}
+
 run_update() {
   local name count choice
-  local changed=() added=() current=() selected=()
+  local changed=() added=() current=() selected=() retired=() stale=() rel
   if [[ ! -d "$TARGET/.agents/skills" ]]; then
     echo "error: no kit install found in $TARGET (.agents/skills/ missing) — run bootstrap without --update first" >&2
     exit 1
@@ -503,6 +626,16 @@ run_update() {
       current+=("$name")
     fi
   done < <(list_skill_names)
+  while IFS= read -r name; do
+    if [[ -e "$TARGET/.agents/skills/$name" || -L "$TARGET/.agents/skills/$name" ]]; then retired+=("$name"); fi
+  done < <(retired_names)
+  local held=()
+  while IFS= read -r rel; do
+    case "$(shipped_state "$rel")" in
+      stale) stale+=("$rel") ;;
+      edited|unsafe) held+=("$rel") ;;
+    esac
+  done < <(shipped_paths)
 
   echo "Skill status:"
   for name in ${changed[@]+"${changed[@]}"}; do
@@ -510,6 +643,11 @@ run_update() {
     echo "  update $name ($count file(s) differ from the kit)"
   done
   for name in ${added[@]+"${added[@]}"}; do echo "  new    $name"; done
+  for name in ${retired[@]+"${retired[@]}"}; do
+    echo "  retired $name (replaced by $(retired_replacement "$name"))"
+  done
+  for rel in ${stale[@]+"${stale[@]}"}; do echo "  update $rel (unedited older kit version)"; done
+  for rel in ${held[@]+"${held[@]}"}; do echo "  keep   $rel (edited or linked locally, not refreshed)"; done
   echo "  ok     ${#current[@]} installed skill(s) already up to date"
   echo
 
@@ -524,8 +662,11 @@ run_update() {
   elif [[ "$ASSUME_YES" -eq 1 ]]; then
     selected=(${changed[@]+"${changed[@]}"} ${added[@]+"${added[@]}"})
   elif [[ "${#changed[@]}" -eq 0 && "${#added[@]}" -eq 0 ]]; then
-    echo "Everything is up to date."
-    return 0
+    if [[ "${#retired[@]}" -eq 0 && "${#stale[@]}" -eq 0 ]]; then
+      echo "Everything is up to date."
+      report_retired_refs
+      return 0
+    fi
   else
     require_tty "--update without --yes or --skills"
     echo "What do you want to do?" >&2
@@ -553,14 +694,19 @@ run_update() {
     esac
   fi
 
-  if [[ "${#selected[@]}" -eq 0 ]]; then
-    echo "Nothing selected — no changes."
+  if [[ "${#selected[@]}" -eq 0 && "${#retired[@]}" -eq 0 && "${#stale[@]}" -eq 0 ]]; then
+    if [[ "${#changed[@]}" -eq 0 && "${#added[@]}" -eq 0 ]]; then
+      echo "Everything is up to date."
+    else
+      echo "Nothing selected — no changes."
+    fi
+    report_retired_refs
     return 0
   fi
   # Updating means replacing kit files; copy_file still refuses symlinks and hard links.
   FORCE=1
   [[ "$DRY" -eq 1 ]] || mkdir -p "$TARGET/.agents/skills"
-  for name in "${selected[@]}"; do
+  for name in ${selected[@]+"${selected[@]}"}; do
     if [[ -L "$TARGET/.agents/skills/$name" ]]; then
       echo "error: refusing symlink skill directory: $name" >&2
       exit 1
@@ -571,6 +717,13 @@ run_update() {
     fi
     apply_skill_update "$name"
   done
+  for name in ${retired[@]+"${retired[@]}"}; do handle_retired "$name"; done
+  for rel in ${stale[@]+"${stale[@]}"}; do
+    if cleanup_allowed "Refresh $rel (unedited older kit version)?" "$rel"; then
+      copy_file "$KIT_DIR/$rel" "$TARGET/$rel"
+    fi
+  done
+  report_retired_refs
   cat <<'NEXT'
 
 Done. For any skill you added, merge its routing row from the kit's
@@ -655,6 +808,12 @@ if [[ "$WITH_GITHUB" -eq 1 && "$SKILLS_ONLY" -ne 1 ]]; then
   copy_file "$KIT_DIR/templates/github/scripts/policy-check.sh" "$TARGET/.github/scripts/policy-check.sh"
   copy_file "$KIT_DIR/templates/github/CODEOWNERS.example" "$TARGET/.github/CODEOWNERS.example"
 fi
+
+while IFS= read -r name; do
+  if [[ -e "$TARGET/.agents/skills/$name" || -L "$TARGET/.agents/skills/$name" ]]; then
+    echo "  note   .agents/skills/$name is retired (replaced by $(retired_replacement "$name")) — run bootstrap.sh --update to remove it"
+  fi
+done < <(retired_names)
 
 cat <<'NEXT'
 

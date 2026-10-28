@@ -1,0 +1,11 @@
+# Skills the kit once shipped and has since removed. Kit-only data read by
+# scripts/bootstrap.sh; never copied into adopters.
+#
+# One line per file the kit ever shipped for a retired skill:
+#   <retired-skill> <replacement-skill> <path inside the skill> <sha256>
+# A path may appear on several lines, one per shipped version. bootstrap.sh
+# --update removes a retired skill only when every file in the adopter's copy
+# matches one of these hashes and nothing else is in the folder.
+security-and-hardening security-audit SKILL.md b3a77648dd83cf8d566436381b1e38f00cecabda5d0340a61b4e2b56e52fc1b1
+security-and-hardening security-audit references/hardening-patterns.md 6db84c11684a6800738eaef9bcef54546a01481be297469011455c90358dad90
+security-and-hardening security-audit references/security-checklist.md 37774056502fe8970dcd2fd27dca5fa31f2a55232649fc3056c89c3af7d62755

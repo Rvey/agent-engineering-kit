@@ -273,6 +273,10 @@ echo "--update refreshes changed skills, adds selected ones, and keeps local fil
 grep -q 'error: usage:' "$fixture/command.log"
 echo "Bare run without a terminal prints usage instead of prompting: PASS"
 
+file_sha256() {
+  if command -v sha256sum >/dev/null 2>&1; then sha256sum "$1" | cut -d' ' -f1; else shasum -a 256 "$1" | cut -d' ' -f1; fi
+}
+
 # Remote installer: feed it a local tarball of this checkout so CI needs no network.
 pkg="$fixture/pkg/agent-engineering-kit-main"
 mkdir -p "$pkg" "$fixture/wrapper-tmp"
@@ -289,14 +293,81 @@ AGENT_KIT_TARBALL="$fixture/kit.tar.gz" AGENT_KIT_SHA256=0000 \
   expect_failure bash "$kit/scripts/install.sh" --update --yes "$remote_target"
 grep -q 'checksum mismatch' "$fixture/command.log"
 test ! -e "$remote_target/.agents/skills/bruh"
-if command -v sha256sum >/dev/null 2>&1; then
-  kit_sum="$(sha256sum "$fixture/kit.tar.gz" | cut -d' ' -f1)"
-else
-  kit_sum="$(shasum -a 256 "$fixture/kit.tar.gz" | cut -d' ' -f1)"
-fi
+kit_sum="$(file_sha256 "$fixture/kit.tar.gz")"
 AGENT_KIT_TARBALL="$fixture/kit.tar.gz" AGENT_KIT_SHA256="$kit_sum" \
   bash "$kit/scripts/install.sh" --update --yes "$remote_target" > "$fixture/remote.log"
 test -f "$remote_target/.agents/skills/bruh/SKILL.md"
 AGENT_KIT_REF='../evil' expect_failure bash "$kit/scripts/install.sh" --list-skills
 grep -q 'invalid AGENT_KIT_REF' "$fixture/command.log"
 echo "install.sh runs bootstrap from a tarball, verifies checksums, and cleans up: PASS"
+
+while read -r retired_name replacement retired_path retired_hash; do
+  case "$retired_name" in ''|'#'*) continue ;; esac
+  test ! -e "$kit/.agents/skills/$retired_name"
+  test -f "$kit/.agents/skills/$replacement/SKILL.md"
+  [[ -n "$retired_path" && "$retired_hash" =~ ^[0-9a-f]{64}$ ]]
+done < "$kit/scripts/retired-skills.txt"
+echo "retired-skills.txt names removed skills with live replacements: PASS"
+
+# Retired skills: a fake entry in the kit copy keeps this independent of git history.
+mkdir -p "$fixture/old-skill/references"
+echo 'old skill' > "$fixture/old-skill/SKILL.md"
+echo 'old reference' > "$fixture/old-skill/references/a.md"
+for f in SKILL.md references/a.md; do
+  echo "old-skill deslop $f $(file_sha256 "$fixture/old-skill/$f")" >> "$pkg/scripts/retired-skills.txt"
+done
+retired_target="$fixture/retired"
+retired_skill="$retired_target/.agents/skills/old-skill"
+mkdir "$retired_target"
+git -C "$retired_target" init -q
+bash "$pkg/scripts/bootstrap.sh" --skills agents-md "$retired_target" > "$fixture/retired.log"
+cp -R "$fixture/old-skill" "$retired_skill"
+echo '| Old task | `.agents/skills/old-skill/SKILL.md` |' > "$retired_target/AGENTS.md"
+bash "$pkg/scripts/bootstrap.sh" --skills-only --skills agents-md "$retired_target" > "$fixture/retired.log"
+grep -q 'note   .agents/skills/old-skill is retired (replaced by deslop)' "$fixture/retired.log"
+
+bash "$pkg/scripts/bootstrap.sh" --update --yes --dry-run "$retired_target" > "$fixture/retired.log"
+grep -q 'retired old-skill (replaced by deslop)' "$fixture/retired.log"
+grep -q 'plan   remove .agents/skills/old-skill/' "$fixture/retired.log"
+test -f "$retired_skill/SKILL.md"
+test ! -e "$retired_target/.agents/skills/deslop"
+
+echo 'local edit' >> "$retired_skill/references/a.md"
+bash "$pkg/scripts/bootstrap.sh" --update --yes "$retired_target" > "$fixture/retired.log"
+grep -q 'keep   old-skill (1 file(s) edited or added locally, remove by hand)' "$fixture/retired.log"
+test -f "$retired_skill/references/a.md"
+test -f "$retired_target/.agents/skills/deslop/SKILL.md"
+grep -q '^  AGENTS.md:1$' "$fixture/retired.log"
+
+cp "$fixture/old-skill/references/a.md" "$retired_skill/references/a.md"
+bash "$pkg/scripts/bootstrap.sh" --update --yes "$retired_target" > "$fixture/retired.log"
+grep -q 'remove .agents/skills/old-skill/' "$fixture/retired.log"
+test ! -e "$retired_skill"
+grep -q 'old-skill' "$retired_target/AGENTS.md"
+
+expect_failure bash "$kit/scripts/setup-check.sh" "$retired_target"
+grep -q 'AGENTS.md routes to missing skills: .agents/skills/old-skill/SKILL.md' "$fixture/command.log"
+echo "--update removes pristine retired skills, keeps edited ones, and setup-check flags dangling rows: PASS"
+
+awk '!/^#/ && $1 == ".agents/skills/README.md" { print $2 }' "$kit/scripts/shipped-files.txt" \
+  | grep -qxF "$(file_sha256 "$kit/.agents/skills/README.md")"
+echo "shipped-files.txt records the current skills README: PASS"
+
+# Kit-owned README: a fake recorded old version stands in for git history.
+skills_readme="$retired_target/.agents/skills/README.md"
+printf '# Old skills README\n| `old-skill` | retired |\n' > "$fixture/old-readme.md"
+echo ".agents/skills/README.md $(file_sha256 "$fixture/old-readme.md")" >> "$pkg/scripts/shipped-files.txt"
+cp "$fixture/old-readme.md" "$skills_readme"
+bash "$pkg/scripts/bootstrap.sh" --update --yes --dry-run "$retired_target" > "$fixture/readme.log"
+grep -q 'update .agents/skills/README.md (unedited older kit version)' "$fixture/readme.log"
+grep -q 'plan   .agents/skills/README.md' "$fixture/readme.log"
+cmp -s "$fixture/old-readme.md" "$skills_readme"
+bash "$pkg/scripts/bootstrap.sh" --update --yes "$retired_target" > "$fixture/readme.log"
+cmp -s "$pkg/.agents/skills/README.md" "$skills_readme"
+
+printf '# Team notes\n| `old-skill` | still here |\n' > "$skills_readme"
+bash "$pkg/scripts/bootstrap.sh" --update --yes "$retired_target" > "$fixture/readme.log"
+grep -q 'keep   .agents/skills/README.md (edited or linked locally' "$fixture/readme.log"
+grep -q '^  .agents/skills/README.md:2$' "$fixture/readme.log"
+grep -q 'Team notes' "$skills_readme"
+echo "--update refreshes an unedited old skills README and keeps an edited one: PASS"
