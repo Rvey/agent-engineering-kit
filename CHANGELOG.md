@@ -12,6 +12,13 @@ versioning once tagged; entries land under Unreleased until then.
   temp dir, runs `bootstrap.sh` with the given arguments, and cleans up.
   `AGENT_KIT_REF` pins a version, `AGENT_KIT_SHA256` verifies the download,
   `AGENT_KIT_TARBALL` uses a local tarball (offline and tests).
+- `bootstrap.sh` install options: `--preset minimal|standard|full` picks a
+  bundle, `--skills <csv|all>` installs a subset, `--list-skills` prints the
+  skill names, `--interactive` runs a guided install (gum/fzf pickers when
+  available, numbered prompts otherwise), `--no-agents-md` skips the
+  template, and `--yes` skips the final confirmation. Options and the target
+  directory can come in any order. Prompts read from the terminal and fail
+  closed when there is none.
 - Running `bootstrap.sh` with no arguments in a terminal opens a menu
   (install, update skills, list skills); any argument keeps it
   non-interactive. `AGENT_KIT_NO_TTY=1` forces the no-terminal path.
