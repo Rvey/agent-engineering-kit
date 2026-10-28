@@ -110,6 +110,9 @@ versioning once tagged; entries land under Unreleased until then.
   per test at about 30 lines, real code over mocks. The pruning workflow moved
   to `AUDIT.md`; `CAMPAIGN.md` only has its links and one
   source-repo path updated.
+- `README.md` reorganised: Quickstart, Generate AGENTS.md and Usage come
+  first, under a navigation bar; "Why this exists" is rewritten and "What's
+  inside" moved to the bottom.
 - The `policy` job requires a `## Tests` PR section when test files change,
   and a `Ratio:` line when added test lines exceed twice the added production
   lines (`TEST_PATTERNS`, `TEST_RATIO_MAX`, `TEST_RATIO_MIN_LINES` in
