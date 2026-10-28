@@ -28,6 +28,7 @@ This kit packages all four into files you drop into any new project.
 | `templates/github/` | Loop-enforcement files copied by bootstrap: PR template, CI gate and policy workflows, check script, CODEOWNERS example |
 | `docs/` | The playbooks: agent workflow, skill catalog, verification gates, performance guards, adding skills, repo structure, loop enforcement, troubleshooting |
 | `scripts/bootstrap.sh` | Installs the kit into any repository in one command |
+| `scripts/install.sh` | Runs `bootstrap.sh` straight from GitHub, no clone needed |
 | `scripts/install-hooks.sh` | Installs a pre-commit hook that runs the fast gates (`.agents/verify.sh --fast`) |
 | `scripts/setup-check.sh` | Reports local setup status and names missing steps |
 | `scripts/new-skill.sh` | Scaffolds a correctly shaped new skill |
@@ -47,6 +48,14 @@ cd /path/to/your-project
 # Optional: include the Cursor rule templates
 ~/agent-engineering-kit/scripts/bootstrap.sh . --with-cursor
 ```
+
+No clone? Run it straight from GitHub in the project root. With no arguments it opens the menu; any `bootstrap.sh` option works too (`--update`, `--preset standard`, `--dry-run`):
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/Rvey/agent-engineering-kit/main/scripts/install.sh)
+```
+
+It downloads the kit into a temporary folder, runs `bootstrap.sh` from there, and deletes the download. Set `AGENT_KIT_REF` to a tag or commit to pin the version, and `AGENT_KIT_SHA256` to verify the tarball. Prefer `bash <(curl …)` over `curl … | bash`: the menu works either way, but you can read the script first with `curl -fsSL <url> | less`.
 
 Preview every action first without writing anything:
 
@@ -231,7 +240,18 @@ The eight performance guards in [docs/04-performance-guards.md](docs/04-performa
 
 ### Updating an existing install
 
-When the kit ships new skills, pull them into a project that already adopted it:
+Run `bootstrap.sh` (or the `install.sh` one-liner from the Quickstart) with no arguments from the project root to get a menu: install the kit, update or add skills, or list them. It defaults to update when the directory already has an install. Any argument skips the menu, so scripts and CI behave as before.
+
+When the kit ships new or changed skills, run the update mode from the project root:
+
+```bash
+~/agent-engineering-kit/scripts/bootstrap.sh --update .
+```
+
+It lists each kit skill as `update` (installed, differs from the kit), `new` (not installed), or up to date, then asks whether to update the installed skills, add all new ones, do both, or decide skill by skill. It touches only `.agents/skills/`, overwrites only the kit files that differ, and keeps your extra local files. Without a terminal, pick up front: `--update --yes` (update and add everything) or `--update --skills deslop,bruh` (just those). Add `--dry-run` to preview.
+
+The older flag-based route still works:
+
 
 ```bash
 # Preview, then copy the new skills (missing files copy without --force)

@@ -7,6 +7,18 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Added
 
+- `scripts/install.sh`: one-line remote install
+  (`bash <(curl -fsSL …/scripts/install.sh)`). Downloads the kit tarball to a
+  temp dir, runs `bootstrap.sh` with the given arguments, and cleans up.
+  `AGENT_KIT_REF` pins a version, `AGENT_KIT_SHA256` verifies the download,
+  `AGENT_KIT_TARBALL` uses a local tarball (offline and tests).
+- Running `bootstrap.sh` with no arguments in a terminal opens a menu
+  (install, update skills, list skills); any argument keeps it
+  non-interactive. `AGENT_KIT_NO_TTY=1` forces the no-terminal path.
+- `bootstrap.sh --update`: compares an existing install's skills with the
+  kit and prompts to update changed skills, add all new skills, do both, or
+  choose skill by skill. Non-interactive with `--yes` or `--skills`; honours
+  `--dry-run`; touches only `.agents/skills/` and keeps local extra files.
 - Vendored `security-audit` from
   [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill)
   (MIT, commit `c1c8a8c`) with its phase docs, domain companions,

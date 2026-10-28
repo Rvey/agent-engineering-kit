@@ -128,7 +128,7 @@ agent-engineering-kit/
 │   ├── hooks/pre-commit         # the fast-gate hook
 │   └── github/                  # PR template, policy + gates workflows, CODEOWNERS
 ├── .agents/skills/              # vendored skills, one directory per skill
-├── scripts/                     # bootstrap, install-hooks, setup-check, lint, new-skill
+├── scripts/                     # bootstrap, install, install-hooks, setup-check, lint, new-skill
 ├── tests/setup-smoke.sh         # end-to-end install/behaviour regression
 ├── docs/                        # playbooks and the troubleshooting guide
 └── .github/workflows/kit.yml    # the kit's own CI: lint, actionlint, self-check, smoke

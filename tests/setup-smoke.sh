@@ -215,3 +215,88 @@ grep -q 'FIXED .agents/verify.sh' "$fixture/fix.log"
 test -x "$fix_target/.agents/verify.sh"
 test "$(git -C "$fix_target" config --get core.hooksPath)" = ".githooks"
 echo "--fix scaffolds the verification script and fast hook: PASS"
+
+bash "$kit/scripts/bootstrap.sh" --list-skills > "$fixture/list.log"
+grep -q '^agents-md$' "$fixture/list.log"
+grep -q '^test-audit$' "$fixture/list.log"
+echo "--list-skills reports available skills: PASS"
+
+preset_target="$fixture/preset-minimal"
+mkdir "$preset_target"
+git -C "$preset_target" init -q
+bash "$kit/scripts/bootstrap.sh" --preset minimal "$preset_target" > "$fixture/preset.log"
+test -f "$preset_target/.agents/skills/agents-md/SKILL.md"
+test -f "$preset_target/.agents/skills/full-setup/SKILL.md"
+test ! -e "$preset_target/.agents/skills/deslop/SKILL.md"
+test ! -e "$preset_target/.github"
+echo "--preset minimal installs the minimal bundle without .github/: PASS"
+
+subset_target="$fixture/preset-subset"
+mkdir "$subset_target"
+git -C "$subset_target" init -q
+bash "$kit/scripts/bootstrap.sh" --skills deslop,test-audit --dry-run "$subset_target" > "$fixture/subset.log"
+grep -q 'plan   .agents/skills/deslop/SKILL.md' "$fixture/subset.log"
+grep -q 'plan   .agents/skills/test-audit/SKILL.md' "$fixture/subset.log"
+test ! -e "$subset_target/AGENTS.md"
+bash "$kit/scripts/bootstrap.sh" --preset standard --skills deslop "$subset_target" > "$fixture/subset-install.log"
+test -f "$subset_target/.agents/skills/deslop/SKILL.md"
+test ! -e "$subset_target/.agents/skills/test-audit/SKILL.md"
+expect_failure bash "$kit/scripts/bootstrap.sh" --skills nope "$subset_target"
+echo "--skills filters the installed subset and rejects unknown names: PASS"
+
+update_target="$fixture/update"
+mkdir "$update_target"
+git -C "$update_target" init -q
+expect_failure bash "$kit/scripts/bootstrap.sh" --update --yes "$update_target"
+grep -q 'no kit install found' "$fixture/command.log"
+bash "$kit/scripts/bootstrap.sh" --skills deslop "$update_target" > "$fixture/update.log"
+echo 'local edit' >> "$update_target/.agents/skills/deslop/SKILL.md"
+echo 'local addition' > "$update_target/.agents/skills/deslop/local.md"
+AGENT_KIT_NO_TTY=1 expect_failure bash "$kit/scripts/bootstrap.sh" --update "$update_target"
+grep -q -- '--update without --yes or --skills needs a terminal' "$fixture/command.log"
+bash "$kit/scripts/bootstrap.sh" --update --dry-run --yes "$update_target" > "$fixture/update.log"
+grep -q 'update deslop (1 file(s) differ' "$fixture/update.log"
+grep -q 'new    test-audit' "$fixture/update.log"
+grep -q 'local edit' "$update_target/.agents/skills/deslop/SKILL.md"
+bash "$kit/scripts/bootstrap.sh" --update --skills deslop,test-audit "$update_target" > "$fixture/update.log"
+cmp -s "$kit/.agents/skills/deslop/SKILL.md" "$update_target/.agents/skills/deslop/SKILL.md"
+test -f "$update_target/.agents/skills/deslop/local.md"
+test -f "$update_target/.agents/skills/test-audit/SKILL.md"
+test ! -e "$update_target/.agents/skills/bruh"
+bash "$kit/scripts/bootstrap.sh" --update --yes "$update_target" > "$fixture/update.log"
+test -f "$update_target/.agents/skills/bruh/SKILL.md"
+AGENT_KIT_NO_TTY=1 bash "$kit/scripts/bootstrap.sh" --update "$update_target" > "$fixture/update.log"
+grep -q 'Everything is up to date.' "$fixture/update.log"
+echo "--update refreshes changed skills, adds selected ones, and keeps local files: PASS"
+
+(cd "$update_target" && AGENT_KIT_NO_TTY=1 expect_failure bash "$kit/scripts/bootstrap.sh")
+grep -q 'error: usage:' "$fixture/command.log"
+echo "Bare run without a terminal prints usage instead of prompting: PASS"
+
+# Remote installer: feed it a local tarball of this checkout so CI needs no network.
+pkg="$fixture/pkg/agent-engineering-kit-main"
+mkdir -p "$pkg" "$fixture/wrapper-tmp"
+tar -C "$kit" --exclude=.git -cf - . | tar -C "$pkg" -xf -
+tar -C "$fixture/pkg" -czf "$fixture/kit.tar.gz" agent-engineering-kit-main
+remote_target="$fixture/remote"
+mkdir "$remote_target"
+git -C "$remote_target" init -q
+(cd "$remote_target" && TMPDIR="$fixture/wrapper-tmp" AGENT_KIT_TARBALL="$fixture/kit.tar.gz" \
+  bash "$kit/scripts/install.sh" --skills deslop .) > "$fixture/remote.log"
+test -f "$remote_target/.agents/skills/deslop/SKILL.md"
+test -z "$(ls -A "$fixture/wrapper-tmp")"
+AGENT_KIT_TARBALL="$fixture/kit.tar.gz" AGENT_KIT_SHA256=0000 \
+  expect_failure bash "$kit/scripts/install.sh" --update --yes "$remote_target"
+grep -q 'checksum mismatch' "$fixture/command.log"
+test ! -e "$remote_target/.agents/skills/bruh"
+if command -v sha256sum >/dev/null 2>&1; then
+  kit_sum="$(sha256sum "$fixture/kit.tar.gz" | cut -d' ' -f1)"
+else
+  kit_sum="$(shasum -a 256 "$fixture/kit.tar.gz" | cut -d' ' -f1)"
+fi
+AGENT_KIT_TARBALL="$fixture/kit.tar.gz" AGENT_KIT_SHA256="$kit_sum" \
+  bash "$kit/scripts/install.sh" --update --yes "$remote_target" > "$fixture/remote.log"
+test -f "$remote_target/.agents/skills/bruh/SKILL.md"
+AGENT_KIT_REF='../evil' expect_failure bash "$kit/scripts/install.sh" --list-skills
+grep -q 'invalid AGENT_KIT_REF' "$fixture/command.log"
+echo "install.sh runs bootstrap from a tarball, verifies checksums, and cleans up: PASS"
