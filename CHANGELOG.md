@@ -35,6 +35,17 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Changed
 
+- `test-audit` rewritten to stop test bloat. `SKILL.md` is now a short
+  writing guide: decide first whether the change needs a test ("no new test"
+  is the default for refactors, docs, and config), write each test fail-first
+  (ideas from obra/superpowers `test-driven-development`, MIT), one behavior
+  per test at about 30 lines, real code over mocks. The pruning workflow moved
+  to `AUDIT.md`; `CAMPAIGN.md` only has its links and one
+  source-repo path updated.
+- The `policy` job requires a `## Tests` PR section when test files change,
+  and a `Ratio:` line when added test lines exceed twice the added production
+  lines (`TEST_PATTERNS`, `TEST_RATIO_MAX`, `TEST_RATIO_MIN_LINES` in
+  `policy.yml`). The PR template and template review protocol ask for it.
 - The kit now dogfoods its own setup. `AGENTS.md` at the repository root is
   this project's real instruction file, generated from its layout; the file
   shipped to other repositories moved to `templates/AGENTS.template.md` and

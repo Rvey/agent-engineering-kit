@@ -72,7 +72,7 @@ review) with no skill loaded.
 | FastAPI / Python API work | `.agents/skills/fastapi-python/SKILL.md` |
 | Python hot-path optimization | `.agents/skills/python-performance-optimization/SKILL.md` |
 | Any performance work, any layer | `.agents/skills/performance-optimization/SKILL.md` |
-| Writing, changing, reviewing, or pruning tests | `.agents/skills/test-audit/SKILL.md` |
+| Writing, changing, reviewing, or pruning tests; fixing a bug; adding behavior | `.agents/skills/test-audit/SKILL.md` |
 | Lint/format configuration | `.agents/skills/eslint-prettier-config/SKILL.md` |
 | Any feature delivered, before review | `.agents/skills/deslop/SKILL.md` |
 | Anything touching input, auth, data, external services, or LLMs | `.agents/skills/security-and-hardening/SKILL.md` |
@@ -156,10 +156,12 @@ A change is not done until all of these are true:
    stores or transmits sensitive data, integrates an external service, adds
    uploads/webhooks, handles PII/payments, or calls an LLM — walk
    `.agents/skills/security-and-hardening/references/security-checklist.md`.
-5. **Test audit**: if tests were added or changed, they pass the authoring
-   gate in `.agents/skills/test-audit/SKILL.md`.
+5. **Tests**: decide whether the change needs a test at all
+   (`.agents/skills/test-audit/SKILL.md`, step 1); "no new test" is a valid
+   answer. Every new test was seen failing first, and the handoff says which
+   regression each one catches, or why none were added.
 6. **Handoff**: what changed, which gates ran with results, known risks,
    follow-ups. No silent scope creep.
-7. **PR evidence**: the pull request body carries the Gates, Deslop, and
-   (when sensitive paths changed) Security sections — the repo's `policy`
-   job blocks the merge otherwise.
+7. **PR evidence**: the pull request body carries the Gates, Deslop,
+   Security (when sensitive paths changed), and Tests (when test files
+   changed) sections — the repo's `policy` job blocks the merge otherwise.

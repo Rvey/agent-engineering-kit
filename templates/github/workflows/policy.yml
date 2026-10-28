@@ -2,10 +2,12 @@
 #
 # Fails a PR when:
 #   1. the PR body lacks real Gates / Deslop evidence (Security when the diff
-#      touches sensitive paths);
-#   2. added code introduces suppressions (eslint-disable, # noqa,
+#      touches sensitive paths, Tests when it touches test files);
+#   2. added test lines exceed TEST_RATIO_MAX times the added production
+#      lines without a `Ratio:` line under ## Tests;
+#   3. added code introduces suppressions (eslint-disable, # noqa,
 #      @ts-ignore) without a written reason;
-#   3. AGENTS.md is missing or still the kit template.
+#   4. AGENTS.md is missing or still the kit template.
 #
 # Enforce it: branch protection -> require the "policy / loop evidence" check.
 # Bypass: maintainers apply the `policy:skip` label (the job is skipped), or
@@ -41,6 +43,14 @@ jobs:
       SENSITIVE_PATTERNS: '(^|/)(auth|payments?|billing|secrets?|credentials?|uploads?|webhooks?)(/|\.|$)|(^|/)\.env(\..+)?$'
       # File extensions scanned for unexplained suppressions.
       SCAN_EXTENSIONS: '*.ts *.tsx *.js *.jsx *.mjs *.cjs *.py *.rb *.go *.rs *.java *.kt *.css *.scss *.vue *.svelte'
+      # Test files: changing one requires a ## Tests section in the PR body.
+      TESTS_SECTION: 'Tests'
+      TEST_PATTERNS: '(^|/)(tests?|__tests__|specs?|e2e)/|[._-](test|spec)s?\.[a-z0-9]+$|(^|/)test_[^/]+\.py$'
+      # Added test lines may be at most this many times the added production
+      # lines (docs excluded) before a "Ratio:" note is required; changes with
+      # fewer than TEST_RATIO_MIN_LINES added test lines are exempt.
+      TEST_RATIO_MAX: '2'
+      TEST_RATIO_MIN_LINES: '40'
     steps:
       - name: Checkout
         uses: actions/checkout@v4

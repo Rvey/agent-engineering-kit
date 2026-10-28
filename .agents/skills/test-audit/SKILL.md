@@ -1,169 +1,86 @@
 ---
 name: test-audit
-description: "Invoke whenever writing, changing, reviewing, or sweeping tests. Authoring gate for new tests plus audit workflow for low-value, implementation-coupled, or duplicative tests and the test-only production seams they demand. Use when adding tests, reviewing a test diff, or pruning a suite that has grown beyond its value."
+description: "Decides whether a change needs a test at all, then writes the fewest, smallest tests that prove it, each seen failing first. Use when writing, changing, or reviewing tests, fixing a bug, or adding behavior; for pruning an existing suite, read AUDIT.md."
 ---
 
 # Test Audit
 
-Three modes, one value bar. Authoring mode gates every new or changed test at
-write time. Audit mode runs focused sweeps of tests that re-assert source,
-duplicate stronger proof, couple behavior to implementation, or keep test-only
-production seams alive. Continue broad audits as separate coherent follow-up
-PRs; optimize for confidence, not deletion count. Campaign mode prunes one
-whole subsystem's test surface (every test file a plugin or core area owns);
-before starting one, read [CAMPAIGN.md](CAMPAIGN.md).
+Every test costs reading time, run time, and upkeep for as long as it lives.
+Write one only when it catches a regression nothing else catches, and prove it
+by watching it fail. **"No new test" is a correct and common answer.**
 
-## Authoring gate
+Fail-first writing rules adapted from obra/superpowers
+`test-driven-development` (MIT); the value and pruning rules from
+openclaw/agent-skills (MIT).
 
-Before adding any test, answer four questions; a missing answer means do not
-add it yet:
+## 1. Decide whether the change needs a test
 
-1. What observable behavior, invariant, or independent contract does it protect?
-2. What credible regression makes it fail?
-3. Why does existing coverage not already catch that failure? Each contract has
-   one primary test owner at the strongest boundary; another layer needs its
-   own distinct risk, such as a transport or lifecycle failure the owner cannot
-   reach. Prefer extending a table-driven case or shared fixture over a
-   near-duplicate test; consolidate duplicated setup in the same change.
-4. Does it need a production seam (export, flag, wrapper, injection hook) that no
-   production caller needs? If yes, move the test to the real boundary instead.
+| Change | New tests |
+|---|---|
+| Refactor, rename, move, formatting | None. Existing tests pass unchanged; one that must change was testing implementation |
+| Docs, comments, copy, config values, dependency bumps | None |
+| Bug fix | One regression test, where the bug lives |
+| New or changed behavior that nothing tests today | One per behavior, not one per function |
+| Public contract: API, CLI flag, config schema, migration, storage format, security check | One per contract rule |
 
-Then check the test against every [junk pattern](#junk-patterns); a match fails
-the gate unless the [retention bar](#retention-bar) names the contract it
-independently guards. A test that would break under behavior-preserving
-refactoring is asserting implementation, not behavior; rewrite it at the
-owning boundary before landing it.
+Before adding a test, search the existing ones. When a test already exercises
+the behavior, extend it (a row in its table, a case in its loop) instead of
+writing another. If you cannot name, in one sentence, the regression a test
+catches, do not write it.
 
-Bug regression tests must fail on the pre-fix code for the intended reason and
-pass after the owner-boundary repair. A regression test that never demonstrably
-failed proves the mock, not the fix. One regression at the owner boundary
-covers the bug; do not replay the same scenario at every layer it crosses.
+## 2. Write it fail-first
 
-## Junk patterns
+1. Write one test. Its name states the behavior: `rejects an expired token`,
+   not `test_validate_2`. A name that needs "and" holds two behaviors.
+2. Run it against the current code. It must **fail, for the reason you
+   expect**. If it passes, it tests something that already works: rewrite it
+   or drop it. An error (import, typo) is not a failure; fix it and rerun.
+3. Write the smallest code that makes it pass. Nothing extra.
+4. Run the file's tests, then the repo's test gate. Clean up only while green.
 
-The shared checklist for both modes: the authoring gate rejects a new test that
-matches one, and audits hunt for existing tests that do.
+A bug-fix test reproduces the bug and fails on the unfixed code. A regression
+test never seen failing proves the mock, not the fix.
 
-- assertion-free coverage probes;
-- self-comparisons and identity copiers;
-- copied fixtures, inventories, manifests, or export lists;
-- exact source, import, or string greps;
-- private predicate or call-shape tests duplicated at real boundaries;
-- duplicate invocations of the same contract;
-- provider-local replays of shared helpers;
-- tests whose only purpose is preserving test-only exports, globals, or wrappers;
-- dead production code whose only callers are tests;
-- expected values produced by the helper or renderer under test;
-- mocks that implement the asserted behavior, or one identical mock standing in
-  for different APIs;
-- fixtures that supply the receipt, admission, or callback ordering the owner
-  should produce, or persistence asserted against a store the path never writes;
-- capability tests that restate declared flags instead of exercising the
-  delivery or acknowledgement the flag promises;
-- negative controls that pass for an unrelated reason, such as a denial from a
-  different guard or a rejection the production path never reaches;
-- names or fixtures that promise more than the input exercises, such as a
-  "retires the window" test asserting the window was not cleared.
+Code that already exists without a test: do not delete it to start over.
+Write the test, break the code on purpose (revert the fix line), watch the
+test fail, then restore the code.
 
-## Value bar
+## 3. Keep it small
 
-Tests justify their maintenance cost by protecting behavior, a credible
-regression, or an independently meaningful contract. In an audit, an existing
-test that must change for behavior-preserving source reorganization is suspect,
-not automatically deletable; the authoring gate still rejects new ones.
+- One behavior per test; every assertion is about that one outcome.
+- About 30 lines per test, setup included. Longer means a shared fixture used
+  by at least two tests, or a test doing too much.
+- Real code over mocks. Mock only the network, clock, filesystem, randomness,
+  or a paid service. Assert on what the code returns or does, never that a
+  mock was called, unless the call is the behavior ("sends one email").
+- No snapshots of large objects or whole pages; assert the fields that matter.
+- No export, flag, or hook in production code that only a test uses. Test
+  through the public entry point instead.
+- Edge cases only for input the code will really see (empty list, missing
+  field), not every permutation.
 
-Before judging a candidate, read the complete test and production owner, its
-entry point, callers, callees, sibling implementations, overlapping tests, CI
-routing, and relevant history. Read root and scoped `AGENTS.md` files first.
-When the test claims dependency-backed behavior, inspect the dependency source
-or types directly.
+Do not write:
 
-## Discovery
+- tests with no assertion, or that compare a value with itself;
+- tests that copy a production list, config, or export set and compare it;
+- tests that grep source for a string or an import;
+- expected values computed by the code under test;
+- the same scenario again at another layer;
+- tests that a behavior-preserving refactor would break.
 
-Keep discovery read-only and report evidence before editing. For broad scope,
-run parallel discovery lanes when available:
+## 4. Report it
 
-- core and packages (`src/`, `packages/`);
-- plugins (`extensions/`);
-- UI, apps, scripts, and tooling;
-- a cross-cutting pattern sweep.
+The PR body's `## Tests` section (the `policy` job requires it when test files
+change) gives:
 
-Outside campaign mode, prefer a few high-confidence candidates over a large
-speculative inventory. Hunt for the [junk patterns](#junk-patterns).
+- for each new or changed test: the regression it catches, and that you saw
+  it fail;
+- or `No new tests: <reason>` (refactor only, docs only, already covered by
+  `<test name>`);
+- when added test lines exceed twice the added production lines, a line
+  `Ratio: <why this change needs that much test code>`.
 
-## Retention bar
+## Pruning an existing suite
 
-Keep a test when it independently enforces a public API, plugin SDK, protocol,
-config, migration, storage, security, platform, default, prompt-byte, generated
-cross-language, package, release, or architecture contract. Also keep:
-
-- call ordering when order is observable behavior;
-- regressions with a credible failure mode;
-- source inspection when it is the cheapest independent guard: it fails when
-  the contract changes (the user-facing key, byte, or path) and survives an
-  identifier-only refactor;
-- a retained test that fails on the baseline: treat it as a possible product
-  bug, reproduce it, and repair the owner rather than deleting it.
-
-Static or slow is not a deletion reason. A test that resembles implementation
-may still be the independent contract; prove otherwise before removing it.
-
-## Candidate evidence
-
-Record every field below before editing. A missing field means the candidate is
-not ready for deletion:
-
-- exact test name and location;
-- what failure it can actually detect;
-- non-test callers of the covered production or support seam;
-- stronger remaining owner-boundary proof, or why no proof is needed;
-- relevant history and the reason the test or seam exists;
-- production or test-support deletion unlocked;
-- risk and the focused validation command.
-
-## Edit shape
-
-Choose one coherent owner-boundary batch. Delete obsolete test-only exports,
-globals, wrappers, and dead production paths instead of preserving aliases.
-Move retained regressions to their canonical owners. Consolidate repeated
-package or dependency assertions into one generic contract.
-
-Prefer net-negative production LOC. Do not add replacement tests that restate
-the same implementation, and do not convert uncertain candidates into cleanup
-to increase deletion counts.
-
-## Validation
-
-Never edit source or tests while a test watcher is running in the checkout.
-Follow the repository's testing policy; route heavy proof through the
-project's remote runner or CI when one exists.
-
-1. Run the smallest owner and sibling tests with the repo's test command
-   (source-repo example: `node scripts/run-vitest.mjs <path-or-filter>`).
-2. For removed source greps or plan assertions, run the executable script or
-   dry-run that owns the real contract.
-3. Run targeted formatting, then `git diff --check`.
-4. Run the changed-file gate required by repository policy (source-repo
-   example: `node scripts/check-changed.mjs --dry-run -- <changed-paths>`).
-5. Inspect `git diff --numstat`; report production/tooling separately from
-   tests and test support.
-6. After final audit edits, run the mandatory review gate.
-
-## Landing and continuation
-
-Commit, push, open a PR, or land only when authorized. Follow the
-repository's PR and landing flow. Land one
-coherent PR at a time; after landing, refresh from current `main` and rerun
-read-only discovery for the next high-confidence batch.
-
-## Handoff
-
-Report:
-
-- root cause and removed low-value categories;
-- production owner simplifications;
-- retained false positives and why they remain valuable;
-- focused and full proof actually run;
-- production versus test LOC;
-- PR and merge state;
-- named follow-ups.
+Read [AUDIT.md](AUDIT.md) for focused sweeps of low-value tests, and
+[CAMPAIGN.md](CAMPAIGN.md) to prune one subsystem's whole suite in one PR.

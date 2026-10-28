@@ -5,9 +5,12 @@
 #
 # Fails when:
 #   1. the PR body is missing a non-empty required section
-#      (Gates, Deslop, plus Security when sensitive paths changed);
-#   2. added code lines introduce suppressions without a written reason;
-#   3. AGENTS.md is missing or still the kit template.
+#      (Gates, Deslop, plus Security when sensitive paths changed, plus Tests
+#      when test files changed);
+#   2. added test lines exceed TEST_RATIO_MAX times the added production lines
+#      without a `Ratio:` line in the Tests section;
+#   3. added code lines introduce suppressions without a written reason;
+#   4. AGENTS.md is missing or still the kit template.
 #
 # Escape hatches: the `policy:skip` label (job-level), or an inline
 # `policy:allow` on an added line.
@@ -20,6 +23,10 @@ REQUIRED_SECTIONS="${REQUIRED_SECTIONS:-Gates,Deslop}"
 SECURITY_SECTION="${SECURITY_SECTION:-Security}"
 SENSITIVE_PATTERNS="${SENSITIVE_PATTERNS:-}"
 SCAN_EXTENSIONS="${SCAN_EXTENSIONS:-}"
+TESTS_SECTION="${TESTS_SECTION:-Tests}"
+TEST_PATTERNS="${TEST_PATTERNS:-}"
+TEST_RATIO_MAX="${TEST_RATIO_MAX:-2}"
+TEST_RATIO_MIN_LINES="${TEST_RATIO_MIN_LINES:-40}"
 
 FAILED=0
 # Paths are printed raw (no git quoting), so flatten line breaks: a newline
@@ -48,9 +55,11 @@ section_body() {
     on { content = content $0 "\n" }
     END {
       gsub(/<!--[^>]*-->/, "", content)
+      raw = content
       gsub(/[[:space:]-]/, "", content)
       gsub(/\[|\]/, "", content)
       if (length(content) < 3) { exit 1 }
+      printf "%s", raw
     }
   ' "$PR_BODY_FILE"
 }
@@ -94,7 +103,50 @@ if (( have_diff )) && [[ -n "$SENSITIVE_PATTERNS" && -n "$changed_files" ]] \
   fi
 fi
 
-# --- 2. Suppressions need a written reason -----------------------------------
+# --- 2. Test changes need a reason; test bloat needs a ratio note ------------
+
+# Added lines per file from numstat; docs count as neither tests nor
+# production, binary files (numstat "-") are skipped.
+if (( have_diff )) && [[ -n "$TEST_PATTERNS" ]]; then
+  if [[ ! "$TEST_RATIO_MAX" =~ ^[0-9]+$ || ! "$TEST_RATIO_MIN_LINES" =~ ^[0-9]+$ ]]; then
+    err "TEST_RATIO_MAX and TEST_RATIO_MIN_LINES must be whole numbers"
+  else
+    test_lines=0
+    prod_lines=0
+    test_files=()
+    while IFS= read -r -d '' rec; do
+      added="${rec%%$'\t'*}"
+      file="${rec#*$'\t'}"
+      file="${file#*$'\t'}"
+      [[ "$added" =~ ^[0-9]+$ ]] || continue
+      if grep -qiE -- "$TEST_PATTERNS" <<< "$file"; then
+        test_lines=$((test_lines + added))
+        test_files+=("$file")
+      elif ! grep -qiE '\.(md|mdx|rst|txt)$' <<< "$file"; then
+        prod_lines=$((prod_lines + added))
+      fi
+    done < <(git -c core.quotePath=false diff -z --numstat --no-renames "$BASE_SHA...$HEAD_SHA" 2>/dev/null || true)
+
+    if (( ${#test_files[@]} )); then
+      hits="$(printf '%s\n' "${test_files[@]}" | head -5 | paste -sd ', ' -)"
+      tests_body=""
+      if tests_body="$(section_body "$TESTS_SECTION" 2>/dev/null)"; then
+        ok "test files changed with ## $TESTS_SECTION evidence ($hits)"
+      else
+        err "test files changed without a '## $TESTS_SECTION' section (the regression each test catches): $hits"
+      fi
+      if (( test_lines >= TEST_RATIO_MIN_LINES && test_lines > TEST_RATIO_MAX * prod_lines )); then
+        if grep -qiE '^[[:space:]*-]*ratio:' <<< "$tests_body"; then
+          ok "test lines ($test_lines) over ${TEST_RATIO_MAX}x production lines ($prod_lines), with a Ratio: note"
+        else
+          err "added $test_lines test lines for $prod_lines production lines (over ${TEST_RATIO_MAX}x): trim the tests or add a 'Ratio: <why>' line under ## $TESTS_SECTION"
+        fi
+      fi
+    fi
+  fi
+fi
+
+# --- 3. Suppressions need a written reason -----------------------------------
 
 # A reason is one of: inline after the directive, or a comment on the added
 # line immediately above it. `policy:allow` exempts a line.
@@ -135,7 +187,7 @@ if (( have_diff )) && [[ -n "$SCAN_EXTENSIONS" ]]; then
   done < <(git -c core.quotePath=false diff -z --name-only --no-renames --diff-filter=ACM "$BASE_SHA...$HEAD_SHA" -- "${exts[@]}" 2>/dev/null || true)
 fi
 
-# --- 3. AGENTS.md must be generated, not copied ------------------------------
+# --- 4. AGENTS.md must be generated, not copied ------------------------------
 
 if [[ ! -f AGENTS.md ]]; then
   err "AGENTS.md is missing — generate it with the agents-md skill (README -> Generate AGENTS.md)"

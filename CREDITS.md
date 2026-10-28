@@ -12,7 +12,7 @@ attribution note in the `SKILL.md`.
 |---|---|---|---|
 | `boost-prompt` | [github/awesome-copilot](https://github.com/github/awesome-copilot) `skills/boost-prompt` | MIT | Adapted: Joyride/VSCode APIs replaced with native question tool + chat output; repo grounding and verification steps added |
 | `deslop` | [openclaw/agent-skills](https://github.com/openclaw/agent-skills) | MIT | Adapted: internal review-gate and linter references generalized |
-| `test-audit` | [openclaw/agent-skills](https://github.com/openclaw/agent-skills) | MIT | Adapted: source-repo scripts/commands generalized; campaign doc retained with real examples |
+| `test-audit` | [openclaw/agent-skills](https://github.com/openclaw/agent-skills) + [obra/superpowers](https://github.com/obra/superpowers) `skills/test-driven-development` | MIT | Rewritten: SKILL.md is a short need-a-test decision plus fail-first writing rules (ideas from superpowers, no text copied verbatim) and size limits; the openclaw audit workflow moved to `AUDIT.md` with source-repo commands generalized; campaign doc retained |
 | `eslint-prettier-config` | [patricio0312rev/skills](https://github.com/patricio0312rev/skills) | MIT | Vendored |
 | `fastapi-python` | [Mindrally/skills](https://github.com/Mindrally/skills) | Apache-2.0 | Vendored (changed: packaged as a skill with usage frontmatter) |
 | `performance-optimization` | [addyosmani/agent-skills](https://github.com/addyosmani/agent-skills) | MIT | Vendored with its checklist |

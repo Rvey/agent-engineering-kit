@@ -26,7 +26,7 @@ directly when an installed skill is not available.
 | `react-next-performance` | React/Next client components, hooks, effects, stream UIs, canvas code | — |
 | `security-and-hardening` | Input handling, auth/authz, sensitive data, external integrations, LLM features | `references/hardening-patterns.md`, `references/security-checklist.md` |
 | `security-audit` | Security audit, pen test, or vulnerability review of an existing codebase (guidance mode by default; full six-phase audit on explicit request) | Phase docs + domain companions at skill root; `validate-*.cjs` (Node) |
-| `test-audit` | Writing/changing/reviewing tests; pruning low-value tests | `CAMPAIGN.md` (whole-subsystem prunes) |
+| `test-audit` | Writing, changing, or reviewing tests; deciding whether a change needs one; pruning low-value tests | `AUDIT.md` (pruning sweeps), `CAMPAIGN.md` (whole-subsystem prunes) |
 | `bruh` | Dense LLM output, specs, logs, or unfamiliar-domain jargon needs a short, ADHD-friendly explanation for engineers | `references/research.md` |
 
 ## Provenance & adaptation
@@ -42,7 +42,7 @@ Full attribution and licenses: [`../../CREDITS.md`](../../CREDITS.md).
 | `frontend-ui-engineering` | addyosmani/agent-skills (MIT) | Vendored with `references/accessibility-checklist.md` |
 | `documentation-and-adrs` | addyosmani/agent-skills (MIT) | Vendored |
 | `deslop` | openclaw/agent-skills (MIT) | Internal review-gate and linter references generalized |
-| `test-audit` | openclaw/agent-skills (MIT) | Source-repo scripts generalized; campaign doc kept with real examples |
+| `test-audit` | openclaw/agent-skills (MIT) + obra/superpowers `test-driven-development` (MIT) | Rewritten: no-test-by-default decision, fail-first writing, size limits; pruning moved to `AUDIT.md` |
 | `eslint-prettier-config` | patricio0312rev/skills (MIT) | Vendored |
 | `fastapi-python` | Mindrally/skills (Apache-2.0) | Packaged as a skill with usage frontmatter |
 | `performance-optimization` | addyosmani/agent-skills (MIT) | Vendored with checklist |

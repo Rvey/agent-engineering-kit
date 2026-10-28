@@ -15,6 +15,7 @@ ladder that makes skipping **visible and merge-blocking** instead of silent.
 | Suppressions have reasons | **Yes, for the checkable classes** | `policy-check.sh` fails `eslint-disable` / `# noqa` / `@ts-ignore` without a written reason |
 | `AGENTS.md` was generated, not copied | **Yes** | `policy-check.sh` fails on the template marker or placeholders |
 | Deslop evidence exists | **Yes — evidence, not quality** | The PR body must carry a non-empty `## Deslop` section |
+| Tests changed for a reason, not bloat | **Yes — evidence, not quality** | `## Tests` is required when test files change; a `Ratio:` note when added test lines exceed 2× production lines |
 | Security sign-off happened | **Partly** | `## Security` is required when sensitive paths change; CODEOWNERS forces a human for those paths |
 | Deslop was done *well*, threats reasoned about | **No** | Human review (or an AI reviewer — advisory only, see below) |
 
@@ -28,10 +29,10 @@ randomly and gets disabled the first busy Friday.
 
 | File | Role |
 |---|---|
-| `pull_request_template.md` | Requires `## Gates`, `## Deslop`, and (when needed) `## Security` sections with real content |
+| `pull_request_template.md` | Requires `## Gates`, `## Deslop`, and (when needed) `## Security` and `## Tests` sections with real content |
 | `workflows/policy.yml` | The no-AI CI job (`policy / loop evidence`) — runs the checks on PR open/edit/push |
 | `workflows/gates.yml` | Runs `.agents/verify.sh`; add the target repo's toolchain and dependency installation |
-| `scripts/policy-check.sh` | The check logic: PR evidence, suppression reasons, generated `AGENTS.md` |
+| `scripts/policy-check.sh` | The check logic: PR evidence, test-change evidence and ratio, suppression reasons, generated `AGENTS.md` |
 | `CODEOWNERS.example` | Rename to `CODEOWNERS` + real owners → security paths force human review |
 
 The generator (`agents-md` skill) writes `.agents/verify.sh` — the gate

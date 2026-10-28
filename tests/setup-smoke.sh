@@ -113,7 +113,9 @@ policy_env=(
   PR_BODY_FILE="$fixture/body.md"
   SENSITIVE_PATTERNS="$(sed -n "s/^ *SENSITIVE_PATTERNS: '\(.*\)'$/\1/p" "$policy_yml")"
   SCAN_EXTENSIONS="$(sed -n "s/^ *SCAN_EXTENSIONS: '\(.*\)'$/\1/p" "$policy_yml")"
+  TEST_PATTERNS="$(sed -n "s/^ *TEST_PATTERNS: '\(.*\)'$/\1/p" "$policy_yml")"
 )
+policy_body="$fixture/body.md"
 commit_all() {
   git -C "$target" add -A
   git -C "$target" -c user.name=Smoke -c user.email=smoke@example.invalid commit -q --no-verify -m "$1"
@@ -124,10 +126,20 @@ policy_fails_with() {
   case_head="$(commit_all case)"
   (
     cd "$target"
-    expect_failure env "${policy_env[@]}" BASE_SHA="$case_base" HEAD_SHA="$case_head" \
-      bash .github/scripts/policy-check.sh
+    expect_failure env "${policy_env[@]}" PR_BODY_FILE="$policy_body" \
+      BASE_SHA="$case_base" HEAD_SHA="$case_head" bash .github/scripts/policy-check.sh
   )
   for message in "$@"; do grep -qF "$message" "$fixture/command.log"; done
+  git -C "$target" checkout -q --detach "$case_base"
+}
+policy_passes() {
+  local case_head
+  case_head="$(commit_all case)"
+  (
+    cd "$target"
+    env "${policy_env[@]}" PR_BODY_FILE="$policy_body" \
+      BASE_SHA="$case_base" HEAD_SHA="$case_head" bash .github/scripts/policy-check.sh > "$fixture/command.log"
+  )
   git -C "$target" checkout -q --detach "$case_base"
 }
 git -C "$target" checkout -q --detach "$base"
@@ -152,6 +164,24 @@ if grep -q '^::warning::injected' "$fixture/command.log"; then
   exit 1
 fi
 echo "Policy scans nested, renamed, and non-ASCII paths: PASS"
+
+echo 'export const b = 2;' > "$target/src/b.ts"
+mkdir -p "$target/tests"
+echo 'def test_b(): assert True' > "$target/tests/test_b.py"
+policy_fails_with "test files changed without a '## Tests' section" 'tests/test_b.py'
+cp "$fixture/body.md" "$fixture/body-tests.md"
+printf '\n## Tests\nb.test.ts catches a wrong b value; seen failing first.\n' >> "$fixture/body-tests.md"
+policy_body="$fixture/body-tests.md"
+echo 'export const b = 2;' > "$target/src/b.ts"
+seq 1 50 | sed 's/^/expect(b).toBe(2); \/\/ /' > "$target/src/b.test.ts"
+policy_fails_with 'added 50 test lines for 1 production lines'
+printf 'Ratio: b is a parser contract; each line is one input.\n' >> "$fixture/body-tests.md"
+echo 'export const b = 2;' > "$target/src/b.ts"
+seq 1 50 | sed 's/^/expect(b).toBe(2); \/\/ /' > "$target/src/b.test.ts"
+policy_passes
+grep -q 'with a Ratio: note' "$fixture/command.log"
+policy_body="$fixture/body.md"
+echo "Policy requires test evidence and a ratio note for test-heavy diffs: PASS"
 
 dry_target="$fixture/dry"
 mkdir "$dry_target"
