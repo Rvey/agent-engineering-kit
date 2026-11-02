@@ -10,7 +10,7 @@ make one of them pass. Report how many held-out rows a changed rule gets
 right separately from the rest. They were written alongside the rules, so
 they check for regressions, not how well the rules generalise.
 
-| # | Request (and context) | Model | Effort | Agents |
+| # | Request (and context) | Model | Effort | Agents / sessions |
 |---|---|---|---|---|
 | 1 | "What does `set -u` do?" | fast | low | single |
 | 2 | "Rename `usr` to `user` in `auth.ts`" | fast | low | single |
@@ -32,6 +32,8 @@ they check for regressions, not how well the rules generalise.
 | 18 | **held out** — "Update the README and the bootstrap script for the new preset" | balanced | medium | single (same change, shared context) |
 | 19 | **held out** — "Audit all skills for broken frontmatter and stale links" | fast | medium | multi: read-only search subagents (fast, medium) |
 | 20 | **held out** — "Why is this function slow?" (pasted, 30 lines, no tools needed) | balanced | medium | single |
+| 21 | "Add the `lean` preset to bootstrap, then write a blog post announcing it" | balanced | medium | sessions: bootstrap change here; blog post in its own session (balanced, medium) after the change lands |
+| 22 | "Now set up the release workflow" (this chat: 70% full, the last task just finished) | balanced | medium | sessions: new session with a handoff, not this chat |
 
 Notes on the harder rows:
 
@@ -42,3 +44,7 @@ Notes on the harder rows:
 - **5, 14** — costly mistakes keep high even on deep; 14 also gets a
   fresh-context review because it touches a sensitive path.
 - **18** — two files, but one change: splitting it would lose context.
+- **21** — the blog post is its own deliverable and needs none of this
+  chat's code context; it waits for the change because it describes it.
+- **22** — the old task is done and the next is different work, so a heavy
+  chat is dead weight. Mid-task, 70% alone would not be a reason.

@@ -12,7 +12,7 @@ actually find them.
 |---|---|---|
 | `agents-md` | Generating a project-specific `AGENTS.md` from a brief or the repo; anti-template verification | — |
 | `full-setup` | Completing adoption, CI gates, hooks, and review enforcement | — |
-| `boost-prompt` | Turning vague requests into a structured brief before any code is written, with a recommended model tier, effort and agent count | `CASES.md` (labelled execution-plan examples) |
+| `boost-prompt` | Turning vague requests into a structured brief before any code is written, with a model tier, effort, subagents and sessions the user confirms before work starts | `CASES.md` (labelled execution-plan examples) |
 | `context-engineering` | Session start / task switch / quality drop — curating rules, specs, and task context | — |
 | `frontend-ui-engineering` | Production-quality UI: design system, layout, a11y, anti-AI-slop | `references/accessibility-checklist.md` |
 | `documentation-and-adrs` | ADRs, public API docs, shipped-behavior notes and changelogs | — |
