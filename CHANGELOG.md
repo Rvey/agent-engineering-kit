@@ -76,6 +76,12 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Changed
 
+- `boost-prompt` briefs end with an execution plan: a model tier (fast,
+  balanced, deep; haiku, sonnet, opus on Claude), a reasoning effort (low to
+  xhigh) and single or multi-agent, each with a short reason and an Unsure
+  line. It never recommends switching models mid-session, keeps subagents at
+  medium effort or above, and picks the smaller option when unsure.
+  `CASES.md` holds 20 labelled examples, 5 held out, to check rule changes.
 - docs/07 now requires conversation resolution and dismissing stale
   approvals, says bot approvals never count, and documents the risk tiers.
   `CODEOWNERS.example` adds release and install paths, `CLAUDE.md` and

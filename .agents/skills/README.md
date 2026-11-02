@@ -14,7 +14,7 @@ directly when an installed skill is not available.
 |---|---|---|
 | `agents-md` | Setting up / refreshing a repo's `AGENTS.md`; template placeholders remain; onboarding a project | — |
 | `full-setup` | Completing kit adoption, CI, hooks, and review enforcement in a target repo | — |
-| `boost-prompt` | Request is vague / missing scope, deliverables, constraints, or success criteria | — |
+| `boost-prompt` | Request is vague / missing scope, deliverables, constraints, or success criteria | `CASES.md` (labelled execution-plan examples) |
 | `context-engineering` | Starting a session, switching tasks, or output quality drops; configuring rules/context | — |
 | `frontend-ui-engineering` | Building or modifying user-facing UI (design system, layout, a11y, anti-slop) | `references/accessibility-checklist.md` |
 | `documentation-and-adrs` | Recording architecture decisions, changing public APIs, shipping user-facing behavior | — |
@@ -36,7 +36,7 @@ Full attribution and licenses: [`../../CREDITS.md`](../../CREDITS.md).
 |---|---|---|
 | `agents-md` | Authored in-house | Generator workflow: brief or repo evidence → project-specific AGENTS.md, with anti-template verification gates |
 | `full-setup` | Authored in-house | Complete adoption workflow with local and remote readiness checks |
-| `boost-prompt` | github/awesome-copilot (MIT) | Native question tool + chat output instead of Joyride/VSCode; repo grounding + brief template |
+| `boost-prompt` | github/awesome-copilot (MIT) | Native question tool + chat output instead of Joyride/VSCode; repo grounding + brief template; execution plan (model tier, effort, single vs multi-agent) adapted from HeyCubit/effortless (MIT) |
 | `context-engineering` | addyosmani/agent-skills (MIT) | Vendored; `../../references/` links rewritten to local `references/` where needed |
 | `frontend-ui-engineering` | addyosmani/agent-skills (MIT) | Vendored with `references/accessibility-checklist.md` |
 | `documentation-and-adrs` | addyosmani/agent-skills (MIT) | Vendored |
