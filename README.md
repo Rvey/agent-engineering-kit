@@ -257,6 +257,13 @@ Full walkthrough: [docs/01-agent-workflow.md](docs/01-agent-workflow.md).
 
 Details and provenance: [docs/02-skill-catalog.md](docs/02-skill-catalog.md) and [`.agents/skills/README.md`](.agents/skills/README.md).
 
+## Model routing
+
+`boost-prompt` gives every task a route line (model, effort, helpers, sessions) that you approve before work starts. The rules live in [its SKILL.md](.agents/skills/boost-prompt/SKILL.md).
+
+- **Claude Code** (this branch): bootstrap installs `.claude/` with pinned helpers (`scout`, `Explore`, `worker`, `reviewer`) and two hooks. One reminds the agent to route each prompt; the other refuses helpers with no known model and asks you before Opus above medium. The guard needs `jq`.
+- **Codex (OpenAI)**: the same setup for GPT-6.1 models (Luna, Terra, Sol; never Astra) is being built on the [`codex-setup`](https://github.com/Rvey/agent-engineering-kit/tree/codex-setup) branch. Until it is merged, Codex users install from that branch.
+
 ## Hard rules
 
 The eight performance guards in [docs/04-performance-guards.md](docs/04-performance-guards.md) (and summarized in `AGENTS.md`) each came from a real production incident — dep-less effects firing on every drag frame, `setState` per stream token, unstable callbacks resetting pollers, and friends. They are the highest-leverage part of this kit: every one of them is a bug class that agents reintroduce by default unless the rule is in front of them.
