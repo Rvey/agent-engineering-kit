@@ -241,7 +241,7 @@ Full walkthrough: [docs/01-agent-workflow.md](docs/01-agent-workflow.md).
 |---|---|
 | `agents-md` | Setting up or refreshing a repo's `AGENTS.md`; template has placeholders; onboarding a project |
 | `full-setup` | Completing kit adoption, including CI, hooks, and required review checks |
-| `boost-prompt` | The request is vague or missing scope/deliverables/constraints |
+| `boost-prompt` | Every task (route: model, effort, helpers, sessions); a vague request also gets a brief first |
 | `context-engineering` | Starting a session, switching tasks, or output quality drops |
 | `frontend-ui-engineering` | Building or modifying user-facing UI (design system, layout, a11y, anti-slop) |
 | `documentation-and-adrs` | Recording a decision, changing a public API, shipping user-facing behavior |

@@ -28,7 +28,7 @@ Two kinds of tasks:
 
 | Kind | Signal | Action |
 |---|---|---|
-| **Clear** | Names scope, deliverables, constraints, verification | Load the owning skill and go |
+| **Clear** | Names scope, deliverables, constraints, verification | State the `boost-prompt` route line, then load the owning skill and go |
 | **Vague** | "fix auth", "make it faster", "add billing", one-liners | Load `boost-prompt` first — **no code until the brief is agreed** |
 
 A good brief is short and testable:

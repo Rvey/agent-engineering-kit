@@ -64,7 +64,7 @@ review) with no skill loaded.
 |---|---|
 | Generate / refresh this repo's `AGENTS.md` (setup) | `.agents/skills/agents-md/SKILL.md` |
 | Complete kit setup in a target repository | `.agents/skills/full-setup/SKILL.md` |
-| Vague, ambiguous, or underspecified request | `.agents/skills/boost-prompt/SKILL.md` |
+| Any task (route model, effort, helpers, sessions); vague or underspecified request (brief first) | `.agents/skills/boost-prompt/SKILL.md` |
 | Starting a session, switching tasks, or output quality drops | `.agents/skills/context-engineering/SKILL.md` |
 | Building or modifying user-facing UI (design system, layout, a11y, anti-slop) | `.agents/skills/frontend-ui-engineering/SKILL.md` |
 | Recording an architecture decision, changing a public API, shipping user-facing behavior | `.agents/skills/documentation-and-adrs/SKILL.md` |

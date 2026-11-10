@@ -38,7 +38,10 @@
 #   - copies templates/AGENTS.template.md into <target-dir>/AGENTS.md (skipped
 #     if present unless --force). The template is a shape, not content: the
 #     next step is generating the project file with the agents-md skill.
-#   - copies selected skills into <target-dir>/.agents/skills/
+#   - copies selected skills into <target-dir>/.agents/skills/, plus a
+#     .claude/skills/ pointer for skills that ship one (boost-prompt)
+#   - copies the Claude Code routing setup: .claude/hooks/kit-*.sh, and the
+#     pinned helper agents and .claude/settings.json when they are missing
 #   - copies the loop-enforcement files into <target-dir>/.github/
 #     (PR template, no-AI policy workflow + check script, CODEOWNERS example)
 #   - copies .cursor/rules/ templates when --with-cursor is given
@@ -618,9 +621,26 @@ report_retired_refs() {
   done < <(retired_names)
 }
 
+# A symlinked .claude/ is skipped as a whole instead of aborting the install.
+claude_dir_ok() { [[ ! -L "$TARGET/.claude" ]]; }
+
+# Kit-owned Claude Code files: routing hooks and pointers of installed skills.
+claude_kit_files() {
+  local hook pointer name
+  for hook in "$KIT_DIR"/.claude/hooks/kit-*.sh; do
+    printf '%s\n' ".claude/hooks/$(basename "$hook")"
+  done
+  for pointer in "$KIT_DIR"/.claude/skills/*/SKILL.md; do
+    [[ -f "$pointer" ]] || continue
+    name="$(basename "$(dirname "$pointer")")"
+    [[ -d "$TARGET/.agents/skills/$name" ]] && printf '%s\n' ".claude/skills/$name/SKILL.md"
+  done
+  return 0
+}
+
 run_update() {
   local name count choice
-  local changed=() added=() current=() selected=() retired=() stale=() rel
+  local changed=() added=() current=() selected=() retired=() stale=() claude_stale=() rel
   if [[ ! -d "$TARGET/.agents/skills" ]]; then
     echo "error: no kit install found in $TARGET (.agents/skills/ missing) — run bootstrap without --update first" >&2
     exit 1
@@ -648,6 +668,12 @@ run_update() {
       edited|unsafe) held+=("$rel") ;;
     esac
   done < <(shipped_paths)
+  if claude_dir_ok; then
+    while IFS= read -r rel; do
+      # Refresh only what an install put there; --update never adds .claude/ files.
+      if [[ -e "$TARGET/$rel" ]] && ! cmp -s "$KIT_DIR/$rel" "$TARGET/$rel"; then claude_stale+=("$rel"); fi
+    done < <(claude_kit_files)
+  fi
 
   echo "Skill status:"
   for name in ${changed[@]+"${changed[@]}"}; do
@@ -660,6 +686,7 @@ run_update() {
   done
   for rel in ${stale[@]+"${stale[@]}"}; do echo "  update $rel (unedited older kit version)"; done
   for rel in ${held[@]+"${held[@]}"}; do echo "  keep   $rel (edited or linked locally, not refreshed)"; done
+  for rel in ${claude_stale[@]+"${claude_stale[@]}"}; do echo "  update $rel (kit-owned Claude Code file)"; done
   echo "  ok     ${#current[@]} installed skill(s) already up to date"
   echo
 
@@ -674,7 +701,7 @@ run_update() {
   elif [[ "$ASSUME_YES" -eq 1 ]]; then
     selected=(${changed[@]+"${changed[@]}"} ${added[@]+"${added[@]}"})
   elif [[ "${#changed[@]}" -eq 0 && "${#added[@]}" -eq 0 ]]; then
-    if [[ "${#retired[@]}" -eq 0 && "${#stale[@]}" -eq 0 ]]; then
+    if [[ "${#retired[@]}" -eq 0 && "${#stale[@]}" -eq 0 && "${#claude_stale[@]}" -eq 0 ]]; then
       echo "Everything is up to date."
       report_retired_refs
       return 0
@@ -706,7 +733,7 @@ run_update() {
     esac
   fi
 
-  if [[ "${#selected[@]}" -eq 0 && "${#retired[@]}" -eq 0 && "${#stale[@]}" -eq 0 ]]; then
+  if [[ "${#selected[@]}" -eq 0 && "${#retired[@]}" -eq 0 && "${#stale[@]}" -eq 0 && "${#claude_stale[@]}" -eq 0 ]]; then
     if [[ "${#changed[@]}" -eq 0 && "${#added[@]}" -eq 0 ]]; then
       echo "Everything is up to date."
     else
@@ -730,6 +757,7 @@ run_update() {
     apply_skill_update "$name"
   done
   for name in ${retired[@]+"${retired[@]}"}; do handle_retired "$name"; done
+  for rel in ${claude_stale[@]+"${claude_stale[@]}"}; do copy_file "$KIT_DIR/$rel" "$TARGET/$rel"; done
   for rel in ${stale[@]+"${stale[@]}"}; do
     if cleanup_allowed "Refresh $rel (unedited older kit version)?" "$rel"; then
       copy_file "$KIT_DIR/$rel" "$TARGET/$rel"
@@ -798,6 +826,10 @@ for name in "${selected_array[@]}"; do
     relative_file="${source_file#"$KIT_DIR"/}"
     copy_file "$source_file" "$TARGET/$relative_file"
   done < <(find "$skill_dir" -type f -print0)
+  # Claude Code lists skills only from .claude/skills/; a pointer makes it visible.
+  if [[ -f "$KIT_DIR/.claude/skills/$name/SKILL.md" ]] && claude_dir_ok; then
+    copy_file "$KIT_DIR/.claude/skills/$name/SKILL.md" "$TARGET/.claude/skills/$name/SKILL.md"
+  fi
 done
 
 if [[ "$SKILLS_ONLY" -ne 1 ]]; then
@@ -809,6 +841,24 @@ if [[ "$SKILLS_ONLY" -ne 1 ]]; then
   for starter in "$KIT_DIR"/templates/verify/*.sh; do
     copy_file "$starter" "$TARGET/.agents/verify-templates/$(basename "$starter")"
   done
+  # Claude Code routing: kit-named hooks are kit-owned; agents and settings
+  # are starters the adopter may already have, so they are never overwritten.
+  if claude_dir_ok; then
+    for hook in "$KIT_DIR"/.claude/hooks/kit-*.sh; do
+      copy_file "$hook" "$TARGET/.claude/hooks/$(basename "$hook")"
+    done
+    for agent in "$KIT_DIR"/.claude/agents/*.md; do
+      copy_if_missing "$agent" "$TARGET/.claude/agents/$(basename "$agent")"
+    done
+    if [[ -e "$TARGET/.claude/settings.json" || -L "$TARGET/.claude/settings.json" ]] \
+      && ! cmp -s "$KIT_DIR/.claude/settings.json" "$TARGET/.claude/settings.json"; then
+      echo "  note   .claude/settings.json exists — merge the hooks block from the kit's .claude/settings.json to enforce routing"
+    fi
+    copy_if_missing "$KIT_DIR/.claude/settings.json" "$TARGET/.claude/settings.json"
+  fi
+fi
+if ! claude_dir_ok; then
+  echo "  skip   .claude/ (symlink — Claude Code routing not installed; copy the kit's .claude/ files by hand)"
 fi
 
 if [[ "$WITH_CURSOR" -eq 1 ]]; then

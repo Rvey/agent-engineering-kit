@@ -10,7 +10,7 @@ is cheaper than a wiki page because agents actually load it.
 |---|---|
 | `.agents/skills/<name>/SKILL.md` | Vendored, committed, travels with the repo — the canonical home |
 | `.agents/skills/<name>/references/` | Tier-2 detail loaded only when the SKILL.md tier is insufficient |
-| Agent-specific dirs (`.claude/skills/`, …) | Optional symlinks/copies for tools that expect their own path |
+| Agent-specific dirs (`.claude/skills/`, …) | Pointer `SKILL.md` with the same frontmatter that names the canonical file, for tools that list skills only from their own path (lint checks it; never a symlink) |
 | Upstream catalogs | Installed per machine via `npx skills add <source>` — not required by the repo |
 
 ## Add workflow

@@ -7,6 +7,23 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Added
 
+- Enforced model routing for Claude Code. `boost-prompt` now has a Route
+  mode for every task (one line: model, effort, helpers, sessions) beside the
+  Brief mode for vague ones. Bootstrap installs `.claude/`: a
+  `.claude/skills/boost-prompt` pointer so Claude Code lists the skill,
+  pinned helper agents (`scout` and `Explore` on Haiku, `worker` on Sonnet,
+  `reviewer` on Opus at medium), a prompt hook that adds a routing reminder,
+  and an agent hook that refuses a helper with no known model, any Fable
+  helper or unreadable input (fail closed, needs `jq`) and asks the user
+  before an Opus helper above medium. Agents and `settings.json` are copied
+  only when missing; hooks are kit-owned `kit-*.sh` files that `--update`
+  refreshes. The guard reads each helper's model and effort from its
+  definition in `.claude/agents/` (project, then user), and treats forks as
+  the session model. A symlinked `.claude/` is skipped with a note.
+  `setup-check.sh` flags missing or unwired hooks and a missing `jq`;
+  `lint.sh` checks that `.claude/skills/` pointers match their skill's
+  frontmatter.
+
 - PR risk tiers and revert plans. The PR template and `policy` job require
   `## Risk` (its first word low, medium or high) and `## How to revert`.
   The job forces `high` when the diff
@@ -76,6 +93,15 @@ versioning once tagged; entries land under Unreleased until then.
 
 ### Changed
 
+- `boost-prompt` execution plans name real models (haiku, sonnet, opus)
+  instead of fast, balanced and deep, and follow three house rules: never
+  Fable; Opus at medium, with high only after the user's yes; separate
+  sessions and helpers by default whenever the task has pieces (scouts for
+  searches, one worker per independent piece, a fresh reviewer after code
+  changes, own session for work with its own commit). Opus is the default
+  when unsure. An escalation order replaces "raise effort": self-check, then
+  a step up, then ask before Opus at high. `CASES.md` is relabelled for
+  these rules, held-out rows included, and gains four rows (23–26).
 - `boost-prompt` briefs end with an execution plan: a model tier (fast,
   balanced, deep; haiku, sonnet, opus on Claude), a reasoning effort (low to
   xhigh), subagents, and separate sessions for context, each with a short
