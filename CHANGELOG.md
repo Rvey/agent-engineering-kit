@@ -5,6 +5,16 @@ versioning once tagged; entries land under Unreleased until then.
 
 ## Unreleased
 
+### Removed
+
+- Claude Code routing hooks (`.claude/hooks/kit-*.sh`) and the kit's
+  `.claude/settings.json`. They ran on every prompt and every helper call,
+  which was too heavy. The routing rule is now one line under the routing
+  table in `AGENTS.md` and the template. Bootstrap no longer installs the
+  hooks or settings, and `setup-check.sh` no longer checks them or `jq`.
+  Adopters who installed them can delete `.claude/hooks/kit-*.sh` and the
+  hooks block from `.claude/settings.json`.
+
 ### Added
 
 - Enforced model routing for Claude Code. `boost-prompt` now has a Route

@@ -16,7 +16,7 @@ Two modes:
 ## When to use
 
 - **Route:** the start of any task that edits files or runs more than one
-  command. The project's prompt hook reminds the agent on every prompt.
+  command. The routing line in `AGENTS.md` points here.
 - **Brief:** scope, deliverables, constraints, repo area, or success
   criteria are vague, ambiguous, or missing; the request could span several
   areas; or it is a one-liner ("fix auth", "make it faster") with no
@@ -189,9 +189,8 @@ and its own outcome (a branch, a PR).
 
 Pinned helpers live in `.claude/agents/`: `scout` and `Explore` (haiku,
 read-only), `worker` (sonnet), `reviewer` (opus, medium). Any other helper
-must be started with an explicit model; the project's agent hook refuses
-one without it, any Fable helper, and asks the user before an Opus helper
-at high effort.
+must be started with an explicit model. Never start a Fable helper, and ask
+the user before an Opus helper at high effort.
 
 Rules for every split:
 

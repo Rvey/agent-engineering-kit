@@ -35,54 +35,17 @@ grep -qx '# my notes' "$target/CLAUDE.md"
 echo "Installer reruns and force preserve local additions and CLAUDE.md: PASS"
 
 test -f "$target/.claude/skills/boost-prompt/SKILL.md"
-test -f "$target/.claude/hooks/kit-agent-guard.sh"
-test -f "$target/.claude/hooks/kit-route-reminder.sh"
+test ! -e "$target/.claude/hooks"
+test ! -e "$target/.claude/settings.json"
 grep -qx 'model: haiku' "$target/.claude/agents/scout.md"
-grep -q 'kit-agent-guard.sh' "$target/.claude/settings.json"
-echo '{"hooks": {}}' > "$target/.claude/settings.json"
 echo '# my scout' > "$target/.claude/agents/scout.md"
 bash "$kit/scripts/bootstrap.sh" "$target" --force > "$fixture/command.log"
-grep -qx '{"hooks": {}}' "$target/.claude/settings.json"
 grep -qx '# my scout' "$target/.claude/agents/scout.md"
-grep -q 'merge the hooks block' "$fixture/command.log"
-expect_failure bash "$target/.agents/setup-check.sh" "$target"
-grep -q 'Wire the routing hooks' "$fixture/command.log"
-cp "$kit/.claude/settings.json" "$target/.claude/settings.json"
-echo "Claude routing files install, force keeps local settings and agents, readiness flags unwired hooks: PASS"
+echo "Claude helper agents install and force keeps local agents: PASS"
 
-guard="$target/.claude/hooks/kit-agent-guard.sh"
-guard_decision() {
-  printf '%s' "$1" | bash "$guard" | jq -r '.hookSpecificOutput.permissionDecision // "allow"'
-}
-[[ "$(printf '%s' '{"tool_input":{"subagent_type":"scout"}}' | bash "$guard")" == "" ]]
-[[ "$(guard_decision '{"tool_input":{"subagent_type":"general-purpose","model":"sonnet"}}')" == allow ]]
-[[ "$(guard_decision '{"tool_input":{"subagent_type":"general-purpose"}}')" == deny ]]
-[[ "$(guard_decision '{"tool_input":{"model":"claude-fable-5-2"}}')" == deny ]]
-[[ "$(guard_decision '{"tool_input":{"model":"gpt-haiku"}}')" == deny ]]
-[[ "$(guard_decision 'not json')" == deny ]]
-[[ "$(guard_decision '{"tool_input":{"subagent_type":"reviewer","effort":"high"}}')" == ask ]]
-[[ "$(guard_decision '{"tool_input":{"model":"opus","effort":"medium"}}')" == allow ]]
-mkdir "$fixture/no-jq"
-ln -s "$(command -v bash)" "$fixture/no-jq/bash"
-ln -s "$(command -v cat)" "$fixture/no-jq/cat"
-printf '{}' | PATH="$fixture/no-jq" bash "$guard" | grep -q '"permissionDecision":"deny"'
-# The definition decides: the adopter's own scout above has no model, so it runs on the session.
-[[ "$(CLAUDE_PROJECT_DIR="$target" HOME="$fixture" guard_decision '{"tool_input":{"subagent_type":"fork","effort":"high"}}')" == ask ]]
-printf -- '---\nname: scout\nmodel: claude-fable-5-2\n---\n' > "$target/.claude/agents/scout.md"
-[[ "$(CLAUDE_PROJECT_DIR="$target" HOME="$fixture" guard_decision '{"tool_input":{"subagent_type":"scout"}}')" == deny ]]
-printf -- '---\nname: scout\nmodel: opus\neffort: high\n---\n' > "$target/.claude/agents/scout.md"
-[[ "$(CLAUDE_PROJECT_DIR="$target" HOME="$fixture" guard_decision '{"tool_input":{"subagent_type":"scout"}}')" == ask ]]
-echo '# my scout' > "$target/.claude/agents/scout.md"
-echo "Agent guard allows pinned models, refuses unpinned, Fable and unreadable input, asks before Opus high: PASS"
-
-reminder="$target/.claude/hooks/kit-route-reminder.sh"
-echo '{}' | CLAUDE_PROJECT_DIR="$target" bash "$reminder" | grep -q 'never Fable'
-[[ -z "$(echo '{}' | CLAUDE_PROJECT_DIR="$fixture" bash "$reminder")" ]]
-echo "Route reminder speaks only where boost-prompt is installed: PASS"
-
-echo '# old hook' > "$target/.claude/hooks/kit-route-reminder.sh"
+echo '# old pointer' > "$target/.claude/skills/boost-prompt/SKILL.md"
 bash "$kit/scripts/bootstrap.sh" --update --yes "$target" > "$fixture/command.log"
-cmp -s "$kit/.claude/hooks/kit-route-reminder.sh" "$target/.claude/hooks/kit-route-reminder.sh"
+cmp -s "$kit/.claude/skills/boost-prompt/SKILL.md" "$target/.claude/skills/boost-prompt/SKILL.md"
 linked="$fixture/linked"
 mkdir -p "$linked" "$fixture/shared-claude"
 git -C "$linked" init -q
@@ -91,7 +54,7 @@ bash "$kit/scripts/bootstrap.sh" "$linked" > "$fixture/command.log"
 grep -q 'skip   .claude/ (symlink' "$fixture/command.log"
 test -z "$(ls -A "$fixture/shared-claude")"
 test -f "$linked/.agents/skills/boost-prompt/SKILL.md"
-echo "--update refreshes kit hooks; a symlinked .claude/ is skipped, not written through: PASS"
+echo "--update refreshes kit pointers; a symlinked .claude/ is skipped, not written through: PASS"
 
 echo 'outside the kit' > "$fixture/victim.txt"
 rm "$target/.agents/skills/deslop/SKILL.md"

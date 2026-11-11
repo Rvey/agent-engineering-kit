@@ -82,18 +82,6 @@ else
   missing "Install the local setup tools" "rerun scripts/bootstrap.sh <dir>"
 fi
 
-if [ -f .agents/skills/boost-prompt/SKILL.md ]; then
-  if [ ! -f .claude/hooks/kit-agent-guard.sh ] || [ ! -f .claude/hooks/kit-route-reminder.sh ]; then
-    missing "Install the Claude Code routing hooks" "rerun scripts/bootstrap.sh <dir> (a symlinked .claude/ is skipped)"
-  elif ! grep -q 'kit-agent-guard.sh' .claude/settings.json 2>/dev/null || ! grep -q 'kit-route-reminder.sh' .claude/settings.json; then
-    missing "Wire the routing hooks in .claude/settings.json" "merge the hooks block from the kit's .claude/settings.json"
-  elif ! command -v jq >/dev/null 2>&1; then
-    missing "Install jq (the agent guard refuses every helper without it)" "brew/apt install jq"
-  else
-    pass "Claude Code routing hooks wired"
-  fi
-fi
-
 if [ -f .agents/verify.sh ] && bash -n .agents/verify.sh 2>/dev/null && [ -x .agents/verify.sh ] && ! grep -q 'SETUP:' .agents/verify.sh; then
   pass "Executable verification script"
 elif (( fix )) && [ ! -f .agents/verify.sh ]; then

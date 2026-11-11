@@ -78,6 +78,8 @@ review) with no skill loaded.
 | Anything touching input, auth, data, external services, or LLMs; security audit, pen test, or vulnerability review | `.agents/skills/security-audit/SKILL.md` |
 | Dense output, spec, log, or jargon the user asks to have explained simply | `.agents/skills/bruh/SKILL.md` |
 
+Routing: before the first tool call of a task that edits files or runs more than one command, state the route line (model · effort · helpers · sessions) from `boost-prompt`'s Route mode. House rules: never Fable; Opus at medium, ask before high; use the pinned helpers in `.claude/agents/` (`scout`, `worker`, `reviewer`) when the task has pieces.
+
 Add a row here the moment a second incident class appears. The routing table
 is the single entry point; if it is not here, agents will not find it.
 

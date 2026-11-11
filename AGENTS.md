@@ -20,6 +20,8 @@ Skill lookup: the vendored copy at .agents/skills/<name>/SKILL.md is authoritati
 | Add/change tests | .agents/skills/test-audit/SKILL.md |
 | Feature done, before review | .agents/skills/deslop/SKILL.md |
 
+Routing: before the first tool call of a task that edits files or runs more than one command, state the route line (model · effort · helpers · sessions) from boost-prompt's Route mode. House rules: never Fable; Opus at medium, ask before high; use the pinned helpers in .claude/agents/ (scout, worker, reviewer) when the task has pieces.
+
 React/FastAPI/perf skills are vendored examples for target repos, not for changes in this kit repo. Do not apply their stack rules here.
 
 ## Hard rules
@@ -49,7 +51,7 @@ Suppression rule: every shellcheck disable= must carry an explaining comment. Un
 - REVIEW.md -- what reviewers check here: failure classes, paths to ignore, reporting format.
 - templates/AGENTS.template.md -- shape shipped to other repos.
 - .agents/skills/*/SKILL.md -- deep workflows.
-- .claude/ -- Claude Code wiring shipped to adopters: boost-prompt pointer, pinned helper agents, routing hooks.
+- .claude/ -- Claude Code wiring shipped to adopters: boost-prompt pointer, pinned helper agents.
 - docs/ -- playbooks and runbooks. CONTRIBUTING.md -- contributor steps.
 - scripts/ -- behavior. Instruction files point at scripts, never duplicate logic.
 

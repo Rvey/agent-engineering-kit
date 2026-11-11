@@ -40,8 +40,7 @@
 #     next step is generating the project file with the agents-md skill.
 #   - copies selected skills into <target-dir>/.agents/skills/, plus a
 #     .claude/skills/ pointer for skills that ship one (boost-prompt)
-#   - copies the Claude Code routing setup: .claude/hooks/kit-*.sh, and the
-#     pinned helper agents and .claude/settings.json when they are missing
+#   - copies the pinned Claude Code helper agents when they are missing
 #   - copies the loop-enforcement files into <target-dir>/.github/
 #     (PR template, no-AI policy workflow + check script, CODEOWNERS example)
 #   - copies .cursor/rules/ templates when --with-cursor is given
@@ -624,12 +623,9 @@ report_retired_refs() {
 # A symlinked .claude/ is skipped as a whole instead of aborting the install.
 claude_dir_ok() { [[ ! -L "$TARGET/.claude" ]]; }
 
-# Kit-owned Claude Code files: routing hooks and pointers of installed skills.
+# Kit-owned Claude Code files: pointers of installed skills.
 claude_kit_files() {
-  local hook pointer name
-  for hook in "$KIT_DIR"/.claude/hooks/kit-*.sh; do
-    printf '%s\n' ".claude/hooks/$(basename "$hook")"
-  done
+  local pointer name
   for pointer in "$KIT_DIR"/.claude/skills/*/SKILL.md; do
     [[ -f "$pointer" ]] || continue
     name="$(basename "$(dirname "$pointer")")"
@@ -841,24 +837,16 @@ if [[ "$SKILLS_ONLY" -ne 1 ]]; then
   for starter in "$KIT_DIR"/templates/verify/*.sh; do
     copy_file "$starter" "$TARGET/.agents/verify-templates/$(basename "$starter")"
   done
-  # Claude Code routing: kit-named hooks are kit-owned; agents and settings
-  # are starters the adopter may already have, so they are never overwritten.
+  # Pinned helper agents are starters the adopter may already have, so they
+  # are never overwritten.
   if claude_dir_ok; then
-    for hook in "$KIT_DIR"/.claude/hooks/kit-*.sh; do
-      copy_file "$hook" "$TARGET/.claude/hooks/$(basename "$hook")"
-    done
     for agent in "$KIT_DIR"/.claude/agents/*.md; do
       copy_if_missing "$agent" "$TARGET/.claude/agents/$(basename "$agent")"
     done
-    if [[ -e "$TARGET/.claude/settings.json" || -L "$TARGET/.claude/settings.json" ]] \
-      && ! cmp -s "$KIT_DIR/.claude/settings.json" "$TARGET/.claude/settings.json"; then
-      echo "  note   .claude/settings.json exists — merge the hooks block from the kit's .claude/settings.json to enforce routing"
-    fi
-    copy_if_missing "$KIT_DIR/.claude/settings.json" "$TARGET/.claude/settings.json"
   fi
 fi
 if ! claude_dir_ok; then
-  echo "  skip   .claude/ (symlink — Claude Code routing not installed; copy the kit's .claude/ files by hand)"
+  echo "  skip   .claude/ (symlink — helper agents not installed; copy the kit's .claude/ files by hand)"
 fi
 
 if [[ "$WITH_CURSOR" -eq 1 ]]; then
